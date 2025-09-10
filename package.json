@@ -1,0 +1,38 @@
+{
+  "scripts": {
+    "test": "playwright test",
+    "test:chrome": "playwright test --project=chromium",
+    "test:firefox": "playwright test --project=firefox",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "show-report": "playwright show-report",
+    "test:allure": "playwright test --reporter=line,allure-playwright",
+    "test:allure:chrome": "playwright test --project=chromium --reporter=line,allure-playwright",
+    "test:allure:firefox": "playwright test --project=firefox --reporter=line,allure-playwright",
+    "test:winforce": "playwright test test/specs/winforce-login.spec.ts --reporter=line,allure-playwright",
+    "test:winforce:ui": "playwright test test/specs/winforce-login.spec.ts --ui",
+    "report:winforce": "npm run test:winforce && npm run allure:generate && npm run allure:open",
+    "report:winforce:clean": "npm run clean:reports && npm run report:winforce",
+    "allure:generate": "allure generate allure-results --clean -o allure-report",
+    "allure:open": "allure open allure-report",
+    "allure:serve": "allure serve allure-results",
+    "test:with-report": "npm run test:allure && npm run allure:generate",
+    "test:full-report": "npm run test:allure && npm run allure:generate && npm run allure:open",
+    "test:full": "npm run test:allure && npm run allure:generate && npm run allure:open",
+    "clean:reports": "rimraf allure-results allure-report playwright-report test-results"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "@types/node": "^24.3.0",
+    "allure-commandline": "^2.34.1",
+    "allure-js-commons": "^2.9.0",
+    "allure-playwright": "^3.3.3",
+    "rimraf": "^6.0.1"
+  },
+  "dependencies": {
+    "mssql": "^11.0.1",
+    "play-sound": "^1.1.6",
+    "prompts": "^2.4.2",
+    "readline-sync": "^1.4.10"
+  }
+}
