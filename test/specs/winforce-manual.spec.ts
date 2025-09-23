@@ -30,12 +30,15 @@ function formatTime(ms: number): string {
     return `${(ms / 1000).toFixed(2)}s`;
 }
 
-// Función para mostrar sección de título
+// Función para mostrar sección de título MEJORADA
 function showSectionTitle(title: string): void {
-    console.log('\n' + '='.repeat(60));
-    console.log(`📋 ${title}`);
-    console.log('='.repeat(60));
+    console.log('\n' + '═'.repeat(80));
+    console.log(`🌌  ${title}`);
+    console.log('═'.repeat(80));
 }
+
+// Función para mostrar información de base de datos
+
 
 // Función para mostrar métricas en vivo
 function showLiveMetrics(metrics: {
@@ -47,17 +50,10 @@ function showLiveMetrics(metrics: {
     cpu: string;
     network: string;
 }): void {
-    console.log('\n📊 LIVE METRICS:');
-    console.log(`   ► Progress: ${metrics.progress}% ${showProgressBar(metrics.progress, 100, 15)}`);
-    console.log(`   ► Elapsed: ${metrics.elapsed} | ETA: ${metrics.eta}`);
-    console.log(`   ► Steps: ${metrics.steps}`);
-    console.log(`   ► Mem: ${metrics.memory} | CPU: ${metrics.cpu} | Net: ${metrics.network}`);
+
 }
 
-// Función para mostrar recomendación
-function showRecommendation(message: string): void {
-    console.log(`🎯 RECOMMENDATION: ${message}`);
-}
+
 
 function obtenerConfiguracion(): ConfigData {
     const configPath = path.join(__dirname, 'config.json');
@@ -107,17 +103,20 @@ async function preguntarActualizarAmbiente(basePage: BasePage): Promise<{ actual
 
         try {
             showSectionTitle('ACTUALIZACIÓN DE AMBIENTE');
-            console.log('¿Desea actualizar el ambiente?');
-            console.log('1. SI');
-            console.log('2. NO');
+
+            console.log('🌌 ¿Desea actualizar su ambiente o usar el mismo?');
+            console.log('1. 🌟 Sí');
+            console.log('2. 💫 No');
+            console.log('\n🎯 Seleccione una opción (1/2):');
 
             const respuesta = rl.question('- ').trim().toUpperCase();
 
             if (respuesta === '1' || respuesta === 'SI') {
-                showSectionTitle('ESCRIBA LA NUEVA URL');
-                console.log('Ejemplo: http://10.23.100.19:183/proy_JC/login');
-                console.log('URL actual:', basePage.baseUrl);
-                const nuevaUrl = rl.question('Escriba la URL BASE del nuevo ambiente: ').trim();
+                showSectionTitle('NUEVA URL DEL AMBIENTE');
+                console.log('✨ Ejemplo: http://10.23.100.19:183/proy_JC/login');
+                console.log(`🔗 URL actual: ${basePage.baseUrl}`);
+console.log(`✨✨✨✨✨ Escriba la URL BASE del nuevo ambiente: ✨✨✨✨`);
+                const nuevaUrl = rl.question('-').trim();
 
                 if (nuevaUrl) {
                     console.log(`✅ Nueva URL configurada: ${nuevaUrl}`);
@@ -145,17 +144,18 @@ async function preguntarCambiarEmail(winforcePage: any): Promise<{ cambiarEmail:
 
         try {
             showSectionTitle('CAMBIO DE EMAIL DEL VENDEDOR');
-
-            console.log('¿Desea cambiar el correo del vendedor?');
-            console.log('1. SI');
-            console.log('2. NO');
+            console.log('📧 ¿Desea cambiar el correo del vendedor?');
+            console.log('1. 🌟 Sí');
+            console.log('2. 💫 No');
+            console.log('\n🎯 Seleccione una opción (1/2):');
 
             const respuesta = rl.question('- ').trim().toUpperCase();
 
             if (respuesta === '1' || respuesta === 'SI') {
                 showSectionTitle('ACTUALIZACIÓN DE EMAIL DEL VENDEDOR');
-                console.log('Email actual:', winforcePage.getVendedorEmail());
-                const nuevoEmail = rl.question('Escriba el nuevo correo del vendedor: ').trim();
+                console.log(`📨 Email actual: ${winforcePage.getVendedorEmail()}`);
+
+                const nuevoEmail = rl.question('-').trim();
 
                 if (nuevoEmail && nuevoEmail.includes('@')) {
                     console.log(`✅ Nuevo email configurado: ${nuevoEmail}`);
@@ -183,15 +183,16 @@ async function preguntarModificarCoordenadas(): Promise<{ modificarCoordenadas: 
         try {
             showSectionTitle('MODIFICACIÓN DE COORDENADAS BASE');
             console.log(`📍 Coordenadas actuales (desde config.json): ${coordenadaBaseLat}, ${coordenadaBaseLon}`);
-            console.log('¿Desea modificar las coordenadas BASE de forma permanente?');
-            console.log('1. Si (se guardarán para reinicios y próximas ejecuciones)');
-            console.log('2. No (mantener coordenadas actuales)');
+            console.log('🗺️ ¿Desea modificar las coordenadas BASE de forma permanente?');
+            console.log('1. 🌟 Sí (se guardarán para reinicios y próximas ejecuciones)');
+            console.log('2. 💫 No (mantener coordenadas actuales)');
+            console.log('\n🎯 Seleccione una opción (1/2):');
 
             const respuesta = rl.question('- ').trim().toUpperCase();
 
             if (respuesta === '1' || respuesta === 'SI') {
                 showSectionTitle('INGRESO DE NUEVAS COORDENADAS BASE PERMANENTES');
-                console.log('Ejemplo: -12.087, -77.016');
+                console.log('✨ Ejemplo: -12.087, -77.016');
                 console.log('💡 Estas coordenadas se guardarán en config.json y sobrevivirán reinicios');
 
                 let coordenadasValidas = false;
@@ -199,7 +200,7 @@ async function preguntarModificarCoordenadas(): Promise<{ modificarCoordenadas: 
                 let longitud = '';
 
                 while (!coordenadasValidas) {
-                    const inputCoordenadas = rl.question('Ingrese las nuevas coordenadas base (latitud, longitud): ').trim();
+                    const inputCoordenadas = rl.question('🌎 Ingrese las nuevas coordenadas base (latitud, longitud): ').trim();
 
                     if (inputCoordenadas === '') {
                         console.log('✅ Manteniendo coordenadas base actuales');
@@ -216,7 +217,7 @@ async function preguntarModificarCoordenadas(): Promise<{ modificarCoordenadas: 
                         console.log(`✅ Nuevas coordenadas base: ${latitud}, ${longitud}`);
                     } else {
                         console.log('❌ Formato inválido. Use el formato: -12.087, -77.016');
-                        console.log('Por favor, intente nuevamente o presione Enter para mantener las actuales');
+                        console.log('🔄 Por favor, intente nuevamente o presione Enter para mantener las actuales');
                     }
                 }
 
@@ -247,13 +248,12 @@ function reproducirSonidoNotificacion(): void {
             const { exec } = require('child_process');
             exec('powershell -c (New-Object Media.SoundPlayer "C:\\Windows\\Media\\Ring03.wav").PlaySync();',
                 { timeout: 3000 }, (error: any) => {
-                    if (error) console.log('⚠️ No se pudo reproducir sonido en Windows');
+
                 });
 
         }
     } catch (error) {
-        console.log('⚠️ No se pudo reproducir sonido de notificación:', error.message);
-        process.stdout.write('\x07');
+
     }
 }
 
@@ -264,7 +264,8 @@ async function preguntarNumeroVentas(): Promise<number> {
 
         try {
             showSectionTitle('CANTIDAD DE VENTAS');
-            const answer = rl.question('¿Cuantas ventas exitosas necesitas realizar? ');
+            console.log('💰 ¿Cuántas ventas exitosas necesitas realizar?');
+            const answer = rl.question('-');
             const numero = parseInt(answer);
 
             if (isNaN(numero) || numero <= 0) {
@@ -287,7 +288,7 @@ async function preguntarSeleccionPlan(): Promise<number> {
         try {
             reproducirSonidoNotificacion();
             showSectionTitle('SELECCIÓN DE PLAN');
-            console.log('ESCRIBA EL NÚMERO DEL PLAN QUE DESEA SELECCIONAR (0 PARA ALEATORIO)');
+            console.log('📋 ESCRIBA EL NÚMERO DEL PLAN QUE DESEA SELECCIONAR (0 PARA ALEATORIO)');
             const answer = rl.question('-');
             const numero = parseInt(answer);
 
@@ -311,7 +312,8 @@ async function preguntarSeleccionOferta(): Promise<number> {
         try {
             reproducirSonidoNotificacion();
             showSectionTitle('SELECCIÓN DE OFERTA');
-            const answer = rl.question('-');
+            console.log('🎁 ESCRIBA EL NÚMERO DE LA OFERTA QUE DESEA SELECCIONAR (0 PARA ALEATORIO)');
+            const answer = rl.question('📦 Oferta: ');
             const numero = parseInt(answer);
 
             if (isNaN(numero) || numero < 0) {
@@ -335,9 +337,10 @@ async function preguntarProductosAdicionales(): Promise<number[]> {
         try {
             reproducirSonidoNotificacion();
             showSectionTitle('PRODUCTOS ADICIONALES');
-            console.log('Escriba los números de los productos que desea agregar (separados por coma)');
-            console.log('Ejemplo: 1,2,3');
-            console.log('O escriba 0 para continuar sin agregar productos');
+            console.log('📦 Escriba los números de los productos que desea agregar (separados por coma)');
+            console.log('✨ Ejemplo: 1,2,3');
+            console.log('💫 O escriba 0 para continuar sin agregar productos');
+            console.log('\n🎯 Selección:');
 
             const answer = rl.question('- ');
 
@@ -368,9 +371,10 @@ async function preguntarPortabilidad(): Promise<boolean> {
         try {
             reproducirSonidoNotificacion();
             showSectionTitle('PREGUNTA DE PORTABILIDAD');
-            console.log('¿Desea una portabilidad?');
-            console.log('1. Si');
-            console.log('2. No');
+            console.log('📱 ¿Desea una portabilidad?');
+            console.log('1. 🌟 Sí');
+            console.log('2. 💫 No');
+            console.log('\n🎯 Seleccione una opción (1/2):');
 
             const answer = rl.question('- ');
             const quierePortabilidad = (answer === '1' || answer.toLowerCase() === 'si');
@@ -438,16 +442,7 @@ function generarCoordenadaUnica(coordenadasManuales?: { lat: string, lon: string
         const lat = `${coordenadasManuales.lat}${generarTresDigitos()}`;
         const lon = `${coordenadasManuales.lon}${generarTresDigitos()}`;
 
-        coordenadaBaseLat = coordenadasManuales.lat;
-        coordenadaBaseLon = coordenadasManuales.lon;
-
-        const config = obtenerConfiguracion();
-        config.coordenadaBaseLat = coordenadaBaseLat;
-        config.coordenadaBaseLon = coordenadaBaseLon;
-        guardarConfiguracion(config);
-
         console.log(`✅ Usando coordenadas: ${lat}, ${lon}`);
-        console.log(`💾 Coordenadas base GUARDADAS para próximos tests: ${coordenadaBaseLat}, ${coordenadaBaseLon}`);
         return { lat, lon };
     }
 
@@ -459,8 +454,7 @@ function generarCoordenadaUnica(coordenadasManuales?: { lat: string, lon: string
         if (!coordenadasData.usadas.includes(coordenadaStr) &&
             !coordenadasData.sinCobertura.includes(coordenadaStr) &&
             !coordenadasData.ventasExitosas.includes(coordenadaStr)) {
-            console.log(`✅ Coordenada generada: ${coordenadaStr}`);
-            console.log(`   (Usando coordenadas base desde config.json)`);
+             console.log(`📍 Coordenadas generadas: ${lat}, ${lon}`);
             return { lat, lon };
         }
     }
@@ -844,13 +838,7 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
     let basePage = new BasePage(page);
     let coordenadasManuales: { lat: string, lon: string } | undefined;
 
-    // Mostrar dashboard inicial
-    console.log('\n' + '='.repeat(60));
-    console.log('           🚀 DEEPSEEK PLAYWRIGHT DASHBOARD');
-    console.log('='.repeat(60));
-    console.log('  TEST: Flujo completo Winforce con múltiples ventas');
-    console.log(`  TIME: ${new Date().toLocaleTimeString()} | DATE: ${new Date().toLocaleDateString()}`);
-    console.log('='.repeat(60));
+
 
     // ►►► PREGUNTAS INICIALES
     const { actualizar, nuevaUrl } = await preguntarActualizarAmbiente(basePage);
@@ -861,29 +849,44 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
 
         const { cambiarEmail, nuevoEmail } = await preguntarCambiarEmail(winforcePage);
 
-        if (cambiarEmail && nuevoEmail) {
-            winforcePage.setVendedorEmail(nuevoEmail);
-            console.log('✅ Email del vendedor actualizado correctamente');
-        }
+   if (cambiarEmail && nuevoEmail) {
+    winforcePage.setVendedorEmail(nuevoEmail);
 
-        // ►►► SOLO PREGUNTAR POR COORDENADAS SI ACTUALIZÓ EL AMBIENTE
+    // ►►► AGREGAR ESTAS LÍNEAS PARA GUARDAR EN CONFIG.JSON
+    const config = obtenerConfiguracion();
+    config.vendedorEmail = nuevoEmail; // Guardar el email en la configuración
+    guardarConfiguracion(config); // Persistir en el archivo
+
+    console.log('✅ Email del vendedor actualizado correctamente y guardado en config.json');
+}
+
+// ►►► SOLO PREGUNTAR POR COORDENADAS SI ACTUALIZÓ EL AMBIENTE
         const { modificarCoordenadas, coordenadasManuales: coordsManuales } = await preguntarModificarCoordenadas();
         coordenadasManuales = coordsManuales;
+
+        if (coordenadasManuales) {
+            const config = obtenerConfiguracion();
+            config.coordenadaBaseLat = coordenadasManuales.lat;
+            config.coordenadaBaseLon = coordenadasManuales.lon;
+            guardarConfiguracion(config);
+            console.log(`💾 Coordenadas base guardadas en config.json: ${coordenadasManuales.lat}, ${coordenadasManuales.lon}`);
+
+            // También actualizar las variables globales
+            coordenadaBaseLat = coordenadasManuales.lat;
+            coordenadaBaseLon = coordenadasManuales.lon;
+        }
     } else {
         console.log('✅ Continuando con ambiente actual...');
-        // ►►► NO PREGUNTAR POR COORDENADAS SI NO ACTUALIZÓ EL AMBIENTE
-        // Se usarán automáticamente las coordenadas guardadas en config.json
-        console.log(`📍 Usando coordenadas base desde config.json: ${coordenadaBaseLat}, ${coordenadaBaseLon}`);
+        // ►►► CUANDO ES "NO", IR DIRECTAMENTE A PREGUNTAR NÚMERO DE VENTAS
     }
 
     // ►►► NUEVA VARIABLE: Para trackear DNIs exitosos en ESTA ejecución
     const dnisExitososEstaEjecucion: string[] = [];
 
     // ►►► INICIALIZACIÓN SEGURA - VERIFICAR ESTADO INICIAL
-    console.log('\n🌐 PHASE 1: INITIALIZATION');
-    console.log('   🔍 Verificando estado inicial del browser...');
+
     const initialUrl = await basePage.getCurrentUrl();
-    console.log(`   📝 URL inicial: ${initialUrl}`);
+
 
     if (initialUrl === 'about:blank') {
         console.log('   🚀 Navegando desde about:blank al login...');
@@ -988,12 +991,7 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
             }
 
             console.log(`🎲 DNI seleccionado: ${dniAleatorio}`);
-            console.log(`📊 DNIs disponibles: ${leerArchivoDNIs().disponibles.length}`);
-            console.log(`📊 DNIs ventas exitosas: ${leerArchivoDNIs().ventasExitosas.length}`);
-            console.log(`🚫 DNIs no califican: ${leerArchivoDNIs().noCalifican.length}`);
-            console.log(`📍 Coordenadas usadas: ${leerCoordenadasUsadas().usadas.length}`);
-            console.log(`📍 Coordenadas ventas exitosas: ${leerCoordenadasUsadas().ventasExitosas.length}`);
-            console.log(`🚫 Coordenadas sin cobertura: ${leerCoordenadasUsadas().sinCobertura.length}`);
+
 
             coordenadasActuales = generarCoordenadaUnica(coordenadasManuales);
             if (!coordenadasActuales) {
@@ -1001,7 +999,6 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
                 throw new Error('NO_HAY_COORDENADAS_UNICAS');
             }
 
-            console.log(`📍 Coordenadas para este intento: ${coordenadasActuales.lat}, ${coordenadasActuales.lon}`);
 
             let debeContinuar = false;
 
@@ -1035,10 +1032,9 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
                 } else {
                     scoreEncontrado = await winforcePage.validarScore(30000);
                     if (scoreEncontrado) {
-                        console.log('✅ Score encontrado, marcando coordenada como usada');
                         marcarCoordenadaComoUsada(coordenadasActuales.lat, coordenadasActuales.lon);
                     } else {
-                        console.log(`🔄 Score no encontrado, reiniciando para nuevo intento...`);
+                        console.log(`🔄 Cliente no califica, reiniciando para nuevo intento...`);
                         if (dniAleatorio) {
                             marcarDNIComoNoCalifica(dniAleatorio);
                         }
@@ -1305,7 +1301,6 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
                                                 planSeleccionado = await ofertaPage.seleccionarPlanManual(numeroPlan);
                                             } else {
                                                 planSeleccionado = await ofertaPage.seleccionarPlanAleatorio();
-                                                console.log(`🎯 Plan seleccionado aleatoriamente: ${planSeleccionado}`);
                                             }
                                             await page.waitForTimeout(3000);
                                             try {
@@ -1328,7 +1323,6 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
                                                     ofertaSeleccionada = await ofertaPage.seleccionarOfertaManual(numeroOferta);
                                                 } else {
                                                     ofertaSeleccionada = await ofertaPage.seleccionarOfertaAleatoria();
-                                                    console.log(`🎯 Oferta seleccionada aleatoriamente: ${ofertaSeleccionada.nombre}`);
                                                 }
 
                                                 console.log('🔄 Verificando productos adicionales...');
@@ -1624,9 +1618,9 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
 
     // ►►► RESUMEN FINAL
     await test.step('Resumen final del proceso', async () => {
-        console.log('\n🎉' + '='.repeat(60));
+        console.log('\n🎉' + '═'.repeat(80));
         console.log('🎯 PROCESO COMPLETADO EXITOSAMENTE');
-        console.log('🎉' + '='.repeat(60));
+        console.log('🎉' + '═'.repeat(80));
 
         console.log(`\n📊 ESTADÍSTICAS FINALES:`);
         console.log(`✅ Ventas exitosas completadas: ${ventasExitosas}/${ventasRequeridas}`);
@@ -1634,7 +1628,7 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
         console.log(`📈 Tasa de éxito: ${((ventasExitosas / (ejecucionCompleta - 1)) * 100).toFixed(2)}%`);
 
         console.log(`\n📋 DNIs EXITOSOS EN ESTA PRUEBA (${dnisExitososEstaEjecucion.length}):`);
-        console.log('='.repeat(50));
+        console.log('═'.repeat(50));
         if (dnisExitososEstaEjecucion.length > 0) {
             dnisExitososEstaEjecucion.forEach((dni, index) => {
                 console.log(`${index + 1}. ${dni}`);
@@ -1642,7 +1636,7 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
         } else {
             console.log('❌ No hubo DNIs exitosos en esta prueba');
         }
-        console.log('='.repeat(50));
+        console.log('═'.repeat(50));
 
         console.log(`\n📋 INFORMACIÓN DE DNIs:`);
         console.log(`🎯 DNIs usados en esta ejecución: ${ventasExitosas}`);
@@ -1651,7 +1645,7 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
         console.log(`🚫 DNIs que no califican: ${leerArchivoDNIs().noCalifican.length}`);
 
         console.log(`\n📋 LISTA DE DNIs DE VENTAS EXITOSAS:`);
-        console.log('='.repeat(40));
+        console.log('═'.repeat(40));
         const dnisVentasExitosas = leerArchivoDNIs().ventasExitosas;
         if (dnisVentasExitosas.length > 0) {
             dnisVentasExitosas.forEach((dni, index) => {
@@ -1660,10 +1654,10 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
         } else {
             console.log('❌ No hay DNIs de ventas exitosas registrados');
         }
-        console.log('='.repeat(40));
+        console.log('═'.repeat(40));
 
         console.log(`\n📋 LISTA DE DNIs QUE NO CALIFICAN:`);
-        console.log('='.repeat(40));
+        console.log('═'.repeat(40));
         const dnisNoCalifican = leerArchivoDNIs().noCalifican;
         if (dnisNoCalifican.length > 0) {
             dnisNoCalifican.forEach((dni, index) => {
@@ -1672,7 +1666,7 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
         } else {
             console.log('✅ No hay DNIs que no califiquen');
         }
-        console.log('='.repeat(40));
+        console.log('═'.repeat(40));
 
         console.log(`\n📍 INFORMACIÓN DE COORDENADAS:`);
         console.log(`🗺️  Coordenadas usadas totales: ${leerCoordenadasUsadas().usadas.length}`);
@@ -1687,21 +1681,12 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
         console.log('\n💾 GUARDANDO INFORMACIÓN...');
         await page.waitForTimeout(2000);
 
-        try {
-            await page.screenshot({
-                path: `resultados-finales-${new Date().getTime()}.png`,
-                fullPage: true
-            });
-            console.log('📸 Captura de pantalla guardada: resultados-finales.png');
-        } catch (error) {
-            console.log('⚠️ No se pudo guardar la captura de pantalla:', error.message);
-        }
-
-        console.log('\n🎉' + '='.repeat(60));
+        console.log('\n🎉' + '═'.repeat(80));
         console.log('✅ TODAS LAS VENTAS SOLICITADAS HAN SIDO COMPLETADAS');
-        console.log('🎉' + '='.repeat(60));
+        console.log('🎉' + '═'.repeat(80));
+        reproducirSonidoNotificacion();
 
         // Mostrar recomendación final
-        showRecommendation('Optimize image upload >3s');
+        //showRecommendation('Optimize image upload >3s');
     });
 });

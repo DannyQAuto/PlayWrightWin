@@ -191,11 +191,11 @@ constructor(page: Page) {
     }
 
     async confirmarCoordenadas(): Promise<void> {
-        console.log('📍 Confirmando coordenadas existentes...');
+
         await this.waitAndClick(this.BuscarCorde);
         await this.waitAndClick(this.CorfirmarCorde);
         await this.waitAndClick(this.ContinuarCorde);
-        console.log('✅ Coordenadas confirmadas');
+
     }
 
     async selectDNIAsDocumentType(): Promise<void> {
@@ -207,7 +207,7 @@ constructor(page: Page) {
                 state: 'visible',
                 timeout: 15000
             });
-            console.log('Opciones del dropdown cargadas');
+
 
             await this.OptionDNI.click();
            console.log('👤 DNI seleccionado');
@@ -237,7 +237,7 @@ constructor(page: Page) {
 
     async verificarZonaRiesgo(): Promise<boolean> {
         try {
-            console.log('🔍 Verificando si aparece modal de zona de riesgo...');
+
 
             const modalSelectors = [
                 'button.swal2-confirm:has-text("OK")',
@@ -253,9 +253,9 @@ constructor(page: Page) {
                 const isVisible = await elemento.isVisible({ timeout: 3000 }).catch(() => false);
 
                 if (isVisible) {
-                    console.log('⚠️ Modal detectado, haciendo clic en OK...');
+
                     await elemento.click();
-                    console.log('✅ Modal cerrado');
+
                     return true;
                 }
             }
@@ -271,7 +271,7 @@ constructor(page: Page) {
 
     async verificarSinCobertura(): Promise<boolean> {
         try {
-            console.log('🔍 Verificando si aparece mensaje "Sin Cobertura"...');
+            console.log('🔍 Verificando si tiene "cobertura"...');
             await this.page.waitForTimeout(2000);
 
             const sinCoberturaVisible = await this.SinCobertura.isVisible({ timeout: 3000 }).catch(() => false);
@@ -454,7 +454,7 @@ constructor(page: Page) {
             }
 
             if (hayModal) {
-                console.log('⏳ Esperando 10 segundos adicionales después del modal...');
+
                 await this.page.waitForTimeout(10000);
             } else {
                 await this.page.waitForTimeout(timeout);
@@ -467,12 +467,12 @@ constructor(page: Page) {
                 console.log(`📊 Texto del Score: ${scoreText}`);
 
                 if (scoreText && scoreText.toLowerCase().includes('score')) {
-                    console.log('✅ Score encontrado correctamente');
+
                     return true;
                 }
             }
 
-            console.log('❌ Score no encontrado, haciendo refresh...');
+
             try {
                 await this.page.reload({ waitUntil: 'domcontentloaded', timeout: 5000 });
             } catch (error) {
@@ -543,13 +543,13 @@ constructor(page: Page) {
 
             await this.TipoDomicilio.waitFor({ state: 'visible', timeout: 10000 });
             await this.TipoDomicilio.click();
-            console.log('✅ Dropdown de tipo de domicilio abierto');
+            console.log('✅ Seleccionando el tipo de domicilio');
 
             await this.page.waitForSelector('.select2-results__options', {
                 state: 'visible',
                 timeout: 10000
             });
-            console.log('✅ Opciones del dropdown cargadas');
+
 
             const opcionLocator = this.page.locator(`.select2-results__option:has-text("${opcion}")`);
             await opcionLocator.waitFor({ state: 'visible', timeout: 10000 });
@@ -650,12 +650,12 @@ constructor(page: Page) {
 
     async seleccionarTipoContactoVenta(): Promise<void> {
         try {
-            console.log('💰 Seleccionando Venta por value (3)...');
+            console.log('💰 Seleccionando opcion de venta');
 
             // Método preferido: seleccionar por value directamente en el select
             await this.selectOptionByValue(this.TipoContactoSelect, '3');
 
-            //console.log('✅ Opcion de Venta se selecciono');
+
             await this.page.waitForTimeout(1000);
 
             // Verificar que la selección fue exitosa
@@ -679,7 +679,7 @@ constructor(page: Page) {
         try {
             console.log('✅ Marcando checkbox de Tratamiento de Datos...');
             await this.checkCheckbox(this.CheckboxTratamientoDatos);
-            console.log('✅ Checkbox de Tratamiento de Datos marcado correctamente');
+
             await this.page.waitForTimeout(1000);
         } catch (error) {
             console.error('❌ Error al marcar checkbox de Tratamiento de Datos:', error);
@@ -691,7 +691,7 @@ constructor(page: Page) {
         try {
             console.log('✅ Marcando checkbox de Material Publicitario...');
             await this.checkCheckbox(this.CheckboxMaterialPublicitario);
-            console.log('✅ Checkbox de Material Publicitario marcado correctamente');
+
             await this.page.waitForTimeout(1000);
         } catch (error) {
             console.error('❌ Error al marcar checkbox de Material Publicitario:', error);
@@ -719,7 +719,7 @@ constructor(page: Page) {
             await this.marcarCheckboxMaterialPublicitario();
             await this.llenarObservaciones();
 
-            console.log('✅ Información adicional completada exitosamente');
+
         } catch (error) {
             console.error('❌ Error al completar información adicional:', error);
             throw error;
@@ -729,14 +729,14 @@ constructor(page: Page) {
     // NUEVO: Método para seleccionar el primer vendedor disponible
     async seleccionarPrimerVendedor(): Promise<void> {
         try {
-            console.log('👤 Abriendo dropdown de vendedor...');
+           // console.log('👤 Abriendo dropdown de vendedor...');
 
             // Esperar a que el dropdown esté disponible
             await this.vendedorDropdown.waitFor({ state: 'visible', timeout: 10000 });
 
             // Hacer clic para abrir el dropdown
             await this.vendedorDropdown.click();
-            console.log('✅ Dropdown de vendedor abierto');
+            // console.log('✅ Dropdown de vendedor abierto');
 
             // Esperar a que las opciones se carguen
             await this.page.waitForTimeout(2000);
@@ -763,7 +763,7 @@ constructor(page: Page) {
                 }
             }
 
-            console.log(`📊 Número de vendedores válidos: ${opcionesValidas.length}`);
+
 
             if (opcionesValidas.length === 0) {
                 console.log('⚠️ No se encontraron vendedores válidos');
@@ -779,7 +779,7 @@ constructor(page: Page) {
 
             // Esperar a que el dropdown se cierre
             await this.page.waitForTimeout(1000);
-            console.log('✅ Vendedor seleccionado exitosamente');
+
 
         } catch (error) {
             console.error('❌ Error al seleccionar vendedor:', error);

@@ -1,5 +1,22 @@
 {
-  "coordenadaBaseLat": "-12.084",
-  "coordenadaBaseLon": "-77.0512",
-  "updatedAt": "2025-09-09T22:30:54.005Z"
+  "coordenadaBaseLat": "-12.061",
+  "coordenadaBaseLon": "-77.046",
+  "updatedAt": "2025-09-23T17:33:19.150Z",
+  "server": "10.23.100.17",
+  "database": "PE_WINET_CRM_JC",
+  "user": "sa",
+  "password": "0pticalN.qa+",
+  "options": {
+    "encrypt": false,
+    "trustServerCertificate": true,
+    "requestTimeout": 3600000
+  },
+  "availableDatabases": [
+    "PE_WINET_CRM_JC",
+    "PE_WINET_CRM_AT",
+    "PE_WINET_CRM_CROSS",
+    "PE_WINET_CRM_RELEASE",
+    "PE_WINET_CRM_SVA"
+  ],
+  "vendedorEmail": "despiritu.waytech@win.pe"
 }

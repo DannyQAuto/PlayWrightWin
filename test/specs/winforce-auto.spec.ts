@@ -1,10 +1,216 @@
 import { test, expect } from '../fixtures/base-test';
 import * as fs from 'fs';
 import * as path from 'path';
-import { OfertaPage } from '../pages/oferta-page';
+import { OfertaPage1 as OfertaPage } from '../pages/oferta-page1';
 import { ConfirmarVentaPage } from '../pages/confirmar-venta-page';
-import { BasePage } from '../pages/base-page'
+import { BasePage } from '../pages/base-page';
 
+// ►►► INTERFACE Y FUNCIONES PARA CONFIGURACIÓN PERSISTENTE
+interface ConfigData {
+coordenadaBaseLat: string;
+coordenadaBaseLon: string;
+lastBaseUrl?: string;
+vendedorEmail?: string;
+updatedAt: string;
+}
+
+// Función para mostrar barra de progreso
+function showProgressBar(current: number, total: number, width: number = 20): string {
+    const percentage = (current / total) * 100;
+    const filled = Math.round((width * current) / total);
+    const empty = width - filled;
+
+    const bar = '█'.repeat(filled) + '░'.repeat(empty);
+    return `[${bar}] ${percentage.toFixed(0)}% (${current}/${total})`;
+}
+
+// Función para mostrar sección de título MEJORADA
+function showSectionTitle(title: string): void {
+    console.log('\n' + '═'.repeat(80));
+    console.log(`🌌  ${title}`);
+    console.log('═'.repeat(80));
+}
+
+function obtenerConfiguracion(): ConfigData {
+    const configPath = path.join(__dirname, 'config.json');
+    try {
+        if (fs.existsSync(configPath)) {
+            const data = fs.readFileSync(configPath, 'utf8');
+            const config = JSON.parse(data);
+            return config;
+        }
+    } catch (error) {
+        console.log('❌ Error leyendo archivo de configuración:', error);
+    }
+
+    // Configuración por defecto si no existe el archivo
+    const configDefault = {
+        coordenadaBaseLat: "-12.097",
+        coordenadaBaseLon: "-77.006",
+        updatedAt: new Date().toISOString()
+    };
+
+    console.log('📁 Creando archivo config.json con valores por defecto');
+    guardarConfiguracion(configDefault);
+
+    return configDefault;
+}
+
+function guardarConfiguracion(config: ConfigData): void {
+    const configPath = path.join(__dirname, 'config.json');
+    try {
+        config.updatedAt = new Date().toISOString();
+        fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+        console.log('💾 Configuración guardada en config.json');
+    } catch (error) {
+        console.log('❌ Error guardando configuración:', error);
+    }
+}
+
+// ►►► CARGAR CONFIGURACIÓN AL INICIAR (persistente después de reinicios)
+const configInicial = obtenerConfiguracion();
+let coordenadaBaseLat = configInicial.coordenadaBaseLat;
+let coordenadaBaseLon = configInicial.coordenadaBaseLon;
+
+// ►►► AGREGADO: Función para preguntar si desea actualizar el ambiente
+async function preguntarActualizarAmbiente(basePage: BasePage): Promise<{ actualizar: boolean; nuevaUrl?: string }> {
+    return new Promise((resolve) => {
+        const rl = require('readline-sync');
+
+        try {
+            showSectionTitle('ACTUALIZACIÓN DE AMBIENTE');
+
+            console.log('🌌 ¿Desea actualizar su ambiente o usar el mismo?');
+            console.log('1. 🌟 Sí');
+            console.log('2. 💫 No');
+            console.log('\n🎯 Seleccione una opción (1/2):');
+
+            const respuesta = rl.question('- ').trim().toUpperCase();
+
+            if (respuesta === '1' || respuesta === 'SI') {
+                showSectionTitle('NUEVA URL DEL AMBIENTE');
+                console.log('✨ Ejemplo: http://10.23.100.19:183/proy_JC/login');
+                console.log(`🔗 URL actual: ${basePage.baseUrl}`);
+                console.log(`✨✨✨✨✨ Escriba la URL BASE del nuevo ambiente: ✨✨✨✨`);
+                const nuevaUrl = rl.question('-').trim();
+
+                if (nuevaUrl) {
+                    console.log(`✅ Nueva URL configurada: ${nuevaUrl}`);
+                    resolve({ actualizar: true, nuevaUrl });
+                } else {
+                    console.log('⚠️ URL vacía, se mantiene la URL actual');
+                    resolve({ actualizar: false });
+                }
+            } else {
+                const urlCompleta = `${basePage.baseUrl}/login`;
+                console.log(`✅ Se mantiene el ambiente actual: ${urlCompleta}`);
+                resolve({ actualizar: false });
+            }
+        } catch (error) {
+            console.log('⚠️ Error en input. Se mantiene el ambiente actual.');
+            resolve({ actualizar: false });
+        }
+    });
+}
+
+// ►►► AGREGADO: Función para preguntar si desea cambiar el email del vendedor
+async function preguntarCambiarEmail(winforcePage: any): Promise<{ cambiarEmail: boolean; nuevoEmail?: string }> {
+    return new Promise((resolve) => {
+        const rl = require('readline-sync');
+
+        try {
+            showSectionTitle('CAMBIO DE EMAIL DEL VENDEDOR');
+            console.log('📧 ¿Desea cambiar el correo del vendedor?');
+            console.log('1. 🌟 Sí');
+            console.log('2. 💫 No');
+            console.log('\n🎯 Seleccione una opción (1/2):');
+
+            const respuesta = rl.question('- ').trim().toUpperCase();
+
+            if (respuesta === '1' || respuesta === 'SI') {
+                showSectionTitle('ACTUALIZACIÓN DE EMAIL DEL VENDEDOR');
+                console.log(`📨 Email actual: ${winforcePage.getVendedorEmail()}`);
+
+                const nuevoEmail = rl.question('-').trim();
+
+                if (nuevoEmail && nuevoEmail.includes('@')) {
+                    console.log(`✅ Nuevo email configurado: ${nuevoEmail}`);
+                    resolve({ cambiarEmail: true, nuevoEmail });
+                } else {
+                    console.log('⚠️ Email inválido o vacío, se mantiene el email actual');
+                    resolve({ cambiarEmail: false });
+                }
+            } else {
+                console.log('✅ Se mantiene el email actual:', winforcePage.getVendedorEmail());
+                resolve({ cambiarEmail: false });
+            }
+        } catch (error) {
+            console.log('⚠️ Error en input. Se mantiene el email actual.');
+            resolve({ cambiarEmail: false });
+        }
+    });
+}
+
+// ►►► AGREGADO: Función para preguntar si desea modificar coordenadas BASE PERSISTENTEMENTE
+async function preguntarModificarCoordenadas(): Promise<{ modificarCoordenadas: boolean; coordenadasManuales?: { lat: string, lon: string } }> {
+    return new Promise((resolve) => {
+        const rl = require('readline-sync');
+
+        try {
+            showSectionTitle('MODIFICACIÓN DE COORDENADAS BASE');
+            console.log(`📍 Coordenadas actuales (desde config.json): ${coordenadaBaseLat}, ${coordenadaBaseLon}`);
+            console.log('🗺️ ¿Desea modificar las coordenadas BASE de forma permanente?');
+            console.log('1. 🌟 Sí (se guardarán para reinicios y próximas ejecuciones)');
+            console.log('2. 💫 No (mantener coordenadas actuales)');
+            console.log('\n🎯 Seleccione una opción (1/2):');
+
+            const respuesta = rl.question('- ').trim().toUpperCase();
+
+            if (respuesta === '1' || respuesta === 'SI') {
+                showSectionTitle('INGRESO DE NUEVAS COORDENADAS BASE PERMANENTES');
+                console.log('✨ Ejemplo: -12.087, -77.016');
+                console.log('💡 Estas coordenadas se guardarán en config.json y sobrevivirán reinicios');
+
+                let coordenadasValidas = false;
+                let latitud = '';
+                let longitud = '';
+
+                while (!coordenadasValidas) {
+                    const inputCoordenadas = rl.question('🌎 Ingrese las nuevas coordenadas base (latitud, longitud): ').trim();
+
+                    if (inputCoordenadas === '') {
+                        console.log('✅ Manteniendo coordenadas base actuales');
+                        resolve({ modificarCoordenadas: false });
+                        return;
+                    }
+
+                    const coordenadasRegex = /^-?\d+\.\d+,\s*-?\d+\.\d+$/;
+                    if (coordenadasRegex.test(inputCoordenadas)) {
+                        const [lat, lon] = inputCoordenadas.split(',').map(coord => coord.trim());
+                        latitud = lat;
+                        longitud = lon;
+                        coordenadasValidas = true;
+                        console.log(`✅ Nuevas coordenadas base: ${latitud}, ${longitud}`);
+                    } else {
+                        console.log('❌ Formato inválido. Use el formato: -12.087, -77.016');
+                        console.log('🔄 Por favor, intente nuevamente o presione Enter para mantener las actuales');
+                    }
+                }
+
+                resolve({
+                    modificarCoordenadas: true,
+                    coordenadasManuales: { lat: latitud, lon: longitud }
+                });
+            } else {
+                console.log('✅ Manteniendo coordenadas base actuales');
+                resolve({ modificarCoordenadas: false });
+            }
+        } catch (error) {
+            console.log('⚠️ Error en input. Manteniendo coordenadas base actuales.');
+            resolve({ modificarCoordenadas: false });
+        }
+    });
+}
 
 // ►►► FUNCIÓN MÁS CONFIABLE PARA PLAYWRIGHT
 async function preguntarNumeroVentas(): Promise<number> {
@@ -12,7 +218,9 @@ async function preguntarNumeroVentas(): Promise<number> {
         const rl = require('readline-sync');
 
         try {
-            const answer = rl.question('¿Cuantas ventas exitosas necesitas realizar? ');
+            showSectionTitle('CANTIDAD DE VENTAS');
+            console.log('💰 ¿Cuántas ventas exitosas necesitas realizar?');
+            const answer = rl.question('-');
             const numero = parseInt(answer);
 
             if (isNaN(numero) || numero <= 0) {
@@ -28,14 +236,70 @@ async function preguntarNumeroVentas(): Promise<number> {
     });
 }
 
+// ►►► FUNCIONES SIMPLIFICADAS - SELECCIÓN AUTOMÁTICA/ALEATORIA
+async function seleccionarPlanAutomatico(ofertaPage: OfertaPage): Promise<string> {
+    console.log('🤖 Seleccionando plan automáticamente (aleatorio)...');
+    const planSeleccionado = await ofertaPage.seleccionarPlanAleatorio();
+    console.log(`✅ Plan seleccionado automáticamente: ${planSeleccionado}`);
+    return planSeleccionado;
+}
+
+async function seleccionarOfertaAutomatica(ofertaPage: OfertaPage): Promise<any> {
+    console.log('🤖 Seleccionando oferta automáticamente (aleatoria)...');
+    const ofertaSeleccionada = await ofertaPage.seleccionarOfertaAleatoria();
+    console.log(`✅ Oferta seleccionada automáticamente: ${ofertaSeleccionada.nombre}`);
+    return ofertaSeleccionada;
+}
+
+async function seleccionarProductosAdicionalesAutomatico(ofertaPage: OfertaPage): Promise<void> {
+    console.log('🤖 Verificando productos adicionales automáticamente...');
+    const hayProductosAdicionales = await ofertaPage.hayProductosAdicionalesDisponibles();
+
+    if (hayProductosAdicionales) {
+        console.log('📦 Productos adicionales disponibles encontrados');
+        const productos = await ofertaPage.listarProductosAdicionalesConNumeros();
+
+        if (productos.length > 0) {
+            // Seleccionar aleatoriamente algunos productos (0-2 productos)
+            const cantidadProductos = Math.floor(Math.random() * 3); // 0, 1 o 2 productos
+            if (cantidadProductos > 0) {
+                const productosAleatorios = [];
+                for (let i = 0; i < cantidadProductos; i++) {
+                    const productoIndex = Math.floor(Math.random() * productos.length) + 1;
+                    productosAleatorios.push(productoIndex);
+                }
+                console.log(`🤖 Seleccionando ${cantidadProductos} producto(s) adicionale(s) aleatoriamente: ${productosAleatorios.join(', ')}`);
+                await ofertaPage.seleccionarProductosAdicionalesManual(productosAleatorios);
+            } else {
+                console.log('🤖 Continuando sin seleccionar productos adicionales (selección aleatoria)');
+            }
+        }
+    } else {
+        console.log('ℹ️ No se encontraron productos adicionales disponibles');
+    }
+}
+
+async function procesarPortabilidadAutomatica(confirmarVentaPage: ConfirmarVentaPage): Promise<void> {
+    console.log('🤖 Procesando portabilidad automáticamente (NO por defecto)...');
+    const hayPortabilidad = await confirmarVentaPage.verificarPortabilidad();
+
+    if (hayPortabilidad) {
+        // Siempre seleccionar NO para portabilidad
+        await confirmarVentaPage.procesarPortabilidadNo();
+        console.log('✅ Portabilidad configurada automáticamente: NO');
+    }
+}
+
 interface DniData {
     disponibles: string[];
-    usados: string[];
+    ventasExitosas: string[];
+    noCalifican: string[];
 }
 
 interface CoordenadasData {
     usadas: string[];
     sinCobertura: string[];
+    ventasExitosas: string[];
 }
 
 function leerCoordenadasUsadas(): CoordenadasData {
@@ -46,7 +310,8 @@ function leerCoordenadasUsadas(): CoordenadasData {
             const parsedData = JSON.parse(data);
             return {
                 usadas: parsedData.usadas || [],
-                sinCobertura: parsedData.sinCobertura || []
+                sinCobertura: parsedData.sinCobertura || [],
+                ventasExitosas: parsedData.ventasExitosas || []
             };
         }
     } catch (error) {
@@ -54,7 +319,8 @@ function leerCoordenadasUsadas(): CoordenadasData {
     }
     return {
         usadas: [],
-        sinCobertura: []
+        sinCobertura: [],
+        ventasExitosas: []
     };
 }
 
@@ -72,15 +338,23 @@ function generarTresDigitos(): string {
     return Math.floor(Math.random() * 1000).toString().padStart(3, '0');
 }
 
-function generarCoordenadaUnica(): { lat: string, lon: string } | null {
+function generarCoordenadaUnica(coordenadasManuales?: { lat: string, lon: string }): { lat: string, lon: string } | null {
+    if (coordenadasManuales) {
+        const lat = `${coordenadasManuales.lat}${generarTresDigitos()}`;
+        const lon = `${coordenadasManuales.lon}${generarTresDigitos()}`;
+        console.log(`✅ Usando coordenadas: ${lat}, ${lon}`);
+        return { lat, lon };
+    }
+
     const coordenadasData = leerCoordenadasUsadas();
     for (let i = 0; i < 100; i++) {
-        const lat = `-12.097${generarTresDigitos()}`;
-        const lon = `-77.006${generarTresDigitos()}`;
+        const lat = `${coordenadaBaseLat}${generarTresDigitos()}`;
+        const lon = `${coordenadaBaseLon}${generarTresDigitos()}`;
         const coordenadaStr = `${lat},${lon}`;
         if (!coordenadasData.usadas.includes(coordenadaStr) &&
-            !coordenadasData.sinCobertura.includes(coordenadaStr)) {
-            console.log(`✅ Coordenada única generada: ${coordenadaStr}`);
+            !coordenadasData.sinCobertura.includes(coordenadaStr) &&
+            !coordenadasData.ventasExitosas.includes(coordenadaStr)) {
+            console.log(`📍 Coordenadas generadas: ${lat}, ${lon}`);
             return { lat, lon };
         }
     }
@@ -97,6 +371,24 @@ function marcarCoordenadaComoUsada(lat: string, lon: string): void {
         console.log(`🚫 Coordenada ${coordenadaStr} marcada como usada`);
     } else {
         console.log(`⚠️ Coordenada ${coordenadaStr} ya estaba marcada como usada`);
+    }
+}
+
+function marcarCoordenadaVentaExitosa(lat: string, lon: string): void {
+    const coordenadasData = leerCoordenadasUsadas();
+    const coordenadaStr = `${lat},${lon}`;
+
+    const indexUsadas = coordenadasData.usadas.indexOf(coordenadaStr);
+    if (indexUsadas !== -1) {
+        coordenadasData.usadas.splice(indexUsadas, 1);
+    }
+
+    if (!coordenadasData.ventasExitosas.includes(coordenadaStr)) {
+        coordenadasData.ventasExitosas.push(coordenadaStr);
+        guardarCoordenadasUsadas(coordenadasData);
+        console.log(`✅ Coordenada ${coordenadaStr} marcada como VENTA EXITOSA`);
+    } else {
+        console.log(`⚠️ Coordenada ${coordenadaStr} ya estaba marcada como venta exitosa`);
     }
 }
 
@@ -117,14 +409,20 @@ function leerArchivoDNIs(): DniData {
     try {
         if (fs.existsSync(filePath)) {
             const data = fs.readFileSync(filePath, 'utf8');
-            return JSON.parse(data);
+            const parsedData = JSON.parse(data);
+            return {
+                disponibles: parsedData.disponibles || [],
+                ventasExitosas: parsedData.ventasExitosas || [],
+                noCalifican: parsedData.noCalifican || []
+            };
         }
     } catch (error) {
         console.log('❌ Error leyendo archivo de DNIs:', error);
     }
     return {
         disponibles: [],
-        usados: []
+        ventasExitosas: [],
+        noCalifican: []
     };
 }
 
@@ -154,9 +452,6 @@ function marcarDNIComoUsado(dni: string): boolean {
     const index = dniData.disponibles.indexOf(dni);
     if (index !== -1) {
         dniData.disponibles.splice(index, 1);
-        if (!dniData.usados.includes(dni)) {
-            dniData.usados.push(dni);
-        }
         guardarEstadoDNIs(dniData);
         console.log(`✅ DNI ${dni} marcado como usado`);
         return true;
@@ -166,37 +461,68 @@ function marcarDNIComoUsado(dni: string): boolean {
     }
 }
 
+function marcarDNIVentaExitosa(dni: string): boolean {
+    const dniData = leerArchivoDNIs();
+    const indexDisponibles = dniData.disponibles.indexOf(dni);
+
+    if (indexDisponibles !== -1) {
+        dniData.disponibles.splice(indexDisponibles, 1);
+    }
+
+    if (!dniData.ventasExitosas.includes(dni)) {
+        dniData.ventasExitosas.push(dni);
+        guardarEstadoDNIs(dniData);
+        console.log(`✅ DNI ${dni} marcado como VENTA EXITOSA`);
+        return true;
+    } else {
+        console.log(`⚠️ DNI ${dni} ya estaba marcado como venta exitosa`);
+        return false;
+    }
+}
+
+function marcarDNIComoNoCalifica(dni: string): boolean {
+    const dniData = leerArchivoDNIs();
+    const indexDisponibles = dniData.disponibles.indexOf(dni);
+
+    if (indexDisponibles !== -1) {
+        dniData.disponibles.splice(indexDisponibles, 1);
+    }
+
+    if (!dniData.noCalifican.includes(dni)) {
+        dniData.noCalifican.push(dni);
+        guardarEstadoDNIs(dniData);
+        console.log(`🚫 DNI ${dni} marcado como NO CALIFICA`);
+        return true;
+    } else {
+        console.log(`⚠️ DNI ${dni} ya estaba marcado como no califica`);
+        return false;
+    }
+}
+
 // ►►► FUNCIÓN MEJORADA DE REINICIO
 async function reiniciarTestCompleto(page: any, winforcePage: any, basePage: BasePage): Promise<boolean> {
     console.log('🔄 REINICIANDO FLUJO COMPLETO DESDE LOGIN...');
 
     try {
-        // Verificar si estamos en about:blank antes de limpiar
         const currentUrl = await basePage.getCurrentUrl();
         if (currentUrl && currentUrl !== 'about:blank') {
-            // Limpiar storage y cookies solo si no estamos en about:blank
             await basePage.clearBrowserData();
         } else {
             console.log('⚠️ Omitiendo limpieza de storage en about:blank');
         }
 
-        // Navegar a login usando BasePage
         await basePage.navigateToLogin();
 
-        // Esperar a que el formulario de login esté presente
         await page.waitForSelector('#username', {
             state: 'visible',
             timeout: 15000
         });
 
-        // Hacer login
         await winforcePage.loginWithDefaultCredentials();
 
-        // Esperar navegación
         await page.waitForLoadState('networkidle', { timeout: 30000 });
         await page.waitForTimeout(3000);
 
-        // Verificar que estamos en la página correcta después del login
         const newUrl = await basePage.getCurrentUrl();
         if (!newUrl.includes('nuevoSeguimiento')) {
             await winforcePage.clickVentasMenu();
@@ -211,11 +537,9 @@ async function reiniciarTestCompleto(page: any, winforcePage: any, basePage: Bas
     } catch (error) {
         console.log('❌ Error en reinicio completo:', error.message);
 
-        // Intentar recuperación
         try {
             await basePage.navigateToLogin();
 
-            // Esperar elementos críticos
             await page.waitForSelector('#username', {
                 state: 'visible',
                 timeout: 10000
@@ -232,17 +556,14 @@ async function reiniciarTestCompleto(page: any, winforcePage: any, basePage: Bas
 // ►►► FUNCIÓN PARA VERIFICAR REINICIO EXITOSO
 async function verificarReinicioExitoso(page: any): Promise<boolean> {
     try {
-        // Verificar que no estamos en about:blank
         const currentUrl = page.url();
         if (currentUrl === 'about:blank') {
             return false;
         }
 
-        // Verificar que estamos en la página correcta
         const isCorrectPage = currentUrl.includes('nuevoSeguimiento') ||
                              currentUrl.includes('login');
 
-        // Verificar que elementos críticos están visibles
         const usernameVisible = await page.isVisible('#username');
         const passwordVisible = await page.isVisible('#password');
 
@@ -252,7 +573,7 @@ async function verificarReinicioExitoso(page: any): Promise<boolean> {
     }
 }
 
-async function buscarScoreDespuesReinicio(page: any, winforcePage: any, basePage: BasePage): Promise<boolean> {
+async function buscarScoreDespuesReinicio(page: any, winforcePage: any, basePage: BasePage, coordenadasManuales?: { lat: string, lon: string }): Promise<boolean> {
     console.log('🔄 BUSCANDO SCORE DESPUÉS DE REINICIO...');
 
     let scoreEncontrado = false;
@@ -270,7 +591,7 @@ async function buscarScoreDespuesReinicio(page: any, winforcePage: any, basePage
 
         console.log(`🎲 DNI seleccionado después de reinicio: ${dniAleatorio}`);
 
-        const coordenadas = generarCoordenadaUnica();
+        const coordenadas = generarCoordenadaUnica(coordenadasManuales);
         if (!coordenadas) {
             console.log('❌ No se pudieron generar coordenadas únicas después de reinicio');
             return false;
@@ -314,6 +635,9 @@ async function buscarScoreDespuesReinicio(page: any, winforcePage: any, basePage
                     marcarCoordenadaComoUsada(coordenadas.lat, coordenadas.lon);
                 } else {
                     console.log(`🔄 Score no encontrado después de reinicio`);
+                    if (dniAleatorio) {
+                        marcarDNIComoNoCalifica(dniAleatorio);
+                    }
                     const reinicioExitoso = await reiniciarTestCompleto(page, winforcePage, basePage);
                     if (!reinicioExitoso) return false;
                     intento++;
@@ -344,10 +668,11 @@ async function buscarScoreDespuesReinicio(page: any, winforcePage: any, basePage
 
     return scoreEncontrado;
 }
-async function continuarFlujoCompletoDespuesReinicio(page: any, winforcePage: any, basePage: BasePage): Promise<boolean> {
+
+async function continuarFlujoCompletoDespuesReinicio(page: any, winforcePage: any, basePage: BasePage, coordenadasManuales?: { lat: string, lon: string }): Promise<boolean> {
     console.log('🔄 EJECUTANDO FLUJO COMPLETO DESPUÉS DE REINICIO...');
 
-    const scoreEncontrado = await buscarScoreDespuesReinicio(page, winforcePage, basePage);
+    const scoreEncontrado = await buscarScoreDespuesReinicio(page, winforcePage, basePage, coordenadasManuales);
 
     if (!scoreEncontrado) {
         console.log('❌ No se pudo encontrar score después de reinicio');
@@ -409,38 +734,78 @@ async function continuarFlujoCompletoDespuesReinicio(page: any, winforcePage: an
 }
 
 // ►►► TEST PRINCIPAL MODIFICADO
-test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, page, browser }) => {
-      const basePage = new BasePage(page);
+test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, page, browser}) => {
+    let basePage = new BasePage(page);
+    let coordenadasManuales: { lat: string, lon: string } | undefined;
+
+    // ►►► PREGUNTAS INICIALES
+    const { actualizar, nuevaUrl } = await preguntarActualizarAmbiente(basePage);
+
+    if (actualizar && nuevaUrl) {
+        basePage.setBaseUrl(nuevaUrl);
+        console.log('✅ Ambiente actualizado correctamente');
+
+        const { cambiarEmail, nuevoEmail } = await preguntarCambiarEmail(winforcePage);
+
+        if (cambiarEmail && nuevoEmail) {
+            winforcePage.setVendedorEmail(nuevoEmail);
+
+            // ►►► AGREGAR ESTAS LÍNEAS PARA GUARDAR EN CONFIG.JSON
+            const config = obtenerConfiguracion();
+            config.vendedorEmail = nuevoEmail; // Guardar el email en la configuración
+            guardarConfiguracion(config); // Persistir en el archivo
+
+            console.log('✅ Email del vendedor actualizado correctamente y guardado en config.json');
+        }
+
+            // ►►► SOLO PREGUNTAR POR COORDENADAS SI ACTUALIZÓ EL AMBIENTE
+        const { modificarCoordenadas, coordenadasManuales: coordsManuales } = await preguntarModificarCoordenadas();
+        coordenadasManuales = coordsManuales;
+
+        if (coordenadasManuales) {
+            const config = obtenerConfiguracion();
+            config.coordenadaBaseLat = coordenadasManuales.lat;
+            config.coordenadaBaseLon = coordenadasManuales.lon;
+            guardarConfiguracion(config);
+            console.log(`💾 Coordenadas base guardadas en config.json: ${coordenadasManuales.lat}, ${coordenadasManuales.lon}`);
+
+            // También actualizar las variables globales
+            coordenadaBaseLat = coordenadasManuales.lat;
+            coordenadaBaseLon = coordenadasManuales.lon;
+        }
+    } else {
+        console.log('✅ Continuando con ambiente actual...');
+        // ►►► CUANDO ES "NO", IR DIRECTAMENTE A PREGUNTAR NÚMERO DE VENTAS
+    }
+
+    // ►►► NUEVA VARIABLE: Para trackear DNIs exitosos en ESTA ejecución
+    const dnisExitososEstaEjecucion: string[] = [];
+
     // ►►► INICIALIZACIÓN SEGURA - VERIFICAR ESTADO INICIAL
-    console.log('🔍 Verificando estado inicial del browser...');
     const initialUrl = await basePage.getCurrentUrl();
-    console.log(`📝 URL inicial: ${initialUrl}`);
 
-
-    // Si estamos en about:blank, navegar directamente al login
-if (initialUrl === 'about:blank') {
-    console.log('🚀 Navegando desde about:blank al login...');
-    await basePage.navigateToLogin();
-
-
-        // Esperar a que los elementos críticos estén visibles
+    if (initialUrl === 'about:blank') {
+        console.log('   🚀 Navegando desde about:blank al login...');
+        await basePage.navigateToLogin();
         await page.waitForSelector('#username', { state: 'visible', timeout: 15000 });
     }
 
     const ventasRequeridas = await preguntarNumeroVentas();
-    console.log(`🎯 Objetivo: ${ventasRequeridas} venta(s) exitosa(s)`);
+    console.log(`\n🎯 Objetivo: ${ventasRequeridas} venta(s) exitosa(s)`);
 
     let ventasExitosas = 0;
     let ejecucionCompleta = 1;
 
     // ►►► BUCLE PRINCIPAL PARA MÚLTIPLES VENTAS
     while (ventasExitosas < ventasRequeridas) {
-        console.log(`\n📊 EJECUCIÓN ${ejecucionCompleta} - Ventas exitosas: ${ventasExitosas}/${ventasRequeridas}`);
+        const progress = Math.round((ventasExitosas / ventasRequeridas) * 100);
+        console.log(`\n📊 EJECUCIÓN ${ejecucionCompleta} ${showProgressBar(ventasExitosas, ventasRequeridas)}`);
 
         const ofertaPage = new OfertaPage(page);
         test.setTimeout(1800000);
 
         let dniAleatorio: string | null = null;
+        let coordenadasActuales: { lat: string, lon: string } | null = null;
         let scoreEncontrado = false;
         let intento = 1;
         let maxIntentos = 50;
@@ -452,21 +817,18 @@ if (initialUrl === 'about:blank') {
             const currentUrl = page.url();
             console.log(`🔍 URL actual: ${currentUrl}`);
 
-            // Si estamos en about:blank, navegar al login
-// Si estamos en about:blank, navegar al login
-if (currentUrl === 'about:blank') {
-    console.log('🔍 Detectado about:blank, navegando al login...');
-    await basePage.navigateToLogin();
-    await winforcePage.loginWithDefaultCredentials();
-    await page.waitForLoadState('networkidle');
-    await winforcePage.clickVentasMenu();
-    await page.waitForTimeout(3000);
-    await winforcePage.clickNewLead();
-    await page.waitForTimeout(2000);
-    return;
-}
+            if (currentUrl === 'about:blank') {
+                console.log('🔍 Detectado about:blank, navegando al login...');
+                await basePage.navigateToLogin();
+                await winforcePage.loginWithDefaultCredentials();
+                await page.waitForLoadState('networkidle');
+                await winforcePage.clickVentasMenu();
+                await page.waitForTimeout(3000);
+                await winforcePage.clickNewLead();
+                await page.waitForTimeout(2000);
+                return;
+            }
 
-            // Si estamos en login, hacer login primero
             if (currentUrl.includes('login')) {
                 console.log('🔐 Detectado en página de login, haciendo login...');
                 await winforcePage.loginWithDefaultCredentials();
@@ -476,7 +838,6 @@ if (currentUrl === 'about:blank') {
                 await winforcePage.clickNewLead();
                 await page.waitForTimeout(2000);
             }
-            // Si no estamos en la página correcta, reiniciar
             else if (!currentUrl.includes('nuevoSeguimiento')) {
                 console.log('🔄 Estado incorrecto detectado, reiniciando...');
                 const reinicioExitoso = await reiniciarTestCompleto(page, winforcePage, basePage);
@@ -490,7 +851,6 @@ if (currentUrl === 'about:blank') {
         });
 
         await test.step('Login y navegación', async () => {
-            // Solo navegar si no estamos ya en la posición correcta
             const currentUrl = page.url();
             if (currentUrl === 'about:blank' || !currentUrl.includes('nuevoSeguimiento')) {
                 console.log('🧭 Navegando a la página inicial...');
@@ -516,18 +876,12 @@ if (currentUrl === 'about:blank') {
             }
 
             console.log(`🎲 DNI seleccionado: ${dniAleatorio}`);
-            console.log(`📊 DNIs disponibles: ${leerArchivoDNIs().disponibles.length}`);
-            console.log(`📊 DNIs usados: ${leerArchivoDNIs().usados.length}`);
-            console.log(`📍 Coordenadas usadas: ${leerCoordenadasUsadas().usadas.length}`);
-            console.log(`🚫 Coordenadas sin cobertura: ${leerCoordenadasUsadas().sinCobertura.length}`);
 
-            const coordenadas = generarCoordenadaUnica();
-            if (!coordenadas) {
+            coordenadasActuales = generarCoordenadaUnica(coordenadasManuales);
+            if (!coordenadasActuales) {
                 console.log('❌ No se pudieron generar coordenadas únicas');
                 throw new Error('NO_HAY_COORDENADAS_UNICAS');
             }
-
-            console.log(`📍 Coordenadas para este intento: ${coordenadas.lat}, ${coordenadas.lon}`);
 
             let debeContinuar = false;
 
@@ -536,8 +890,8 @@ if (currentUrl === 'about:blank') {
                 await winforcePage.clickAnadirLead();
                 await page.waitForTimeout(3000);
 
-                await winforcePage.CoodenadaLat.fill(coordenadas.lat);
-                await winforcePage.CoodenadaLong.fill(coordenadas.lon);
+                await winforcePage.CoodenadaLat.fill(coordenadasActuales.lat);
+                await winforcePage.CoodenadaLong.fill(coordenadasActuales.lon);
                 await winforcePage.confirmarCoordenadas();
                 await page.waitForTimeout(2000);
 
@@ -552,7 +906,7 @@ if (currentUrl === 'about:blank') {
                 const haySinCobertura = await winforcePage.verificarSinCobertura();
                 if (haySinCobertura) {
                     console.log('🚫 Coordenadas sin cobertura detectadas - Marcando y reiniciando...');
-                    marcarCoordenadaSinCobertura(coordenadas.lat, coordenadas.lon);
+                    marcarCoordenadaSinCobertura(coordenadasActuales.lat, coordenadasActuales.lon);
                     const reinicioExitoso = await reiniciarTestCompleto(page, winforcePage, basePage);
                     if (!reinicioExitoso) throw new Error('REINICIO_FALLIDO');
                     scoreEncontrado = false;
@@ -561,10 +915,12 @@ if (currentUrl === 'about:blank') {
                 } else {
                     scoreEncontrado = await winforcePage.validarScore(30000);
                     if (scoreEncontrado) {
-                        console.log('✅ Score encontrado, marcando coordenada como usada');
-                        marcarCoordenadaComoUsada(coordenadas.lat, coordenadas.lon);
+                        marcarCoordenadaComoUsada(coordenadasActuales.lat, coordenadasActuales.lon);
                     } else {
-                        console.log(`🔄 Score no encontrado, reiniciando para nuevo intento...`);
+                        console.log(`🔄 Cliente no califica, reiniciando para nuevo intento...`);
+                        if (dniAleatorio) {
+                            marcarDNIComoNoCalifica(dniAleatorio);
+                        }
                         const reinicioExitoso = await reiniciarTestCompleto(page, winforcePage, basePage);
                         if (!reinicioExitoso) throw new Error('REINICIO_FALLIDO');
                         intento++;
@@ -622,7 +978,7 @@ if (currentUrl === 'about:blank') {
         });
 
         if (huboReinicio) {
-            const flujoCompletado = await continuarFlujoCompletoDespuesReinicio(page, winforcePage, basePage);
+            const flujoCompletado = await continuarFlujoCompletoDespuesReinicio(page, winforcePage, basePage, coordenadasManuales);
             if (!flujoCompletado) {
                 throw new Error('NO_SE_PUDO_COMPLETAR_FLUJO_DESPUES_DE_REINICIO');
             }
@@ -718,24 +1074,24 @@ if (currentUrl === 'about:blank') {
 
                                     const isPlanSelectVisible = await ofertaPage.isSelectFiltroOfertaVisible();
                                     if (isPlanSelectVisible) {
-                                        console.log('✅ Selector de planes visible - Seleccionando plan aleatorio');
+                                        console.log('✅ Selector de planes visible - Seleccionando plan automáticamente');
 
-                                        const planSeleccionado = await ofertaPage.seleccionarPlanAleatorio();
-                                        console.log(`🎯 Plan seleccionado aleatoriamente: ${planSeleccionado}`);
-
+                                        // ►►► SELECCIÓN AUTOMÁTICA DE PLAN (ALEATORIO)
+                                        const planSeleccionado = await seleccionarPlanAutomatico(ofertaPage);
                                         await page.waitForTimeout(3000);
-                                        console.log('🔄 Esperando a que carguen las ofertas después de seleccionar plan...');
 
                                         try {
                                             await ofertaPage.esperarOfertasCargadas();
 
-                                            const ofertaSeleccionada = await ofertaPage.seleccionarOfertaAleatoria();
-                                            console.log(`✅ Oferta seleccionada: ${ofertaSeleccionada.nombre} - S/ ${ofertaSeleccionada.precio}`);
-
+                                            // ►►► SELECCIÓN AUTOMÁTICA DE OFERTA (ALEATORIA)
+                                            const ofertaSeleccionada = await seleccionarOfertaAutomatica(ofertaPage);
                                             await page.waitForTimeout(2000);
 
+                                            // ►►► SELECCIÓN AUTOMÁTICA DE PRODUCTOS ADICIONALES (ALEATORIO)
+                                            await seleccionarProductosAdicionalesAutomatico(ofertaPage);
+
                                         } catch (ofertaError) {
-                                            console.log('⚠️ Error al seleccionar oferta:', ofertaError.message);
+                                            console.log('⚠️ Error al seleccionar oferta automáticamente:', ofertaError.message);
                                             console.log('🔄 Intentando continuar sin selección de oferta...');
                                         }
 
@@ -753,20 +1109,25 @@ if (currentUrl === 'about:blank') {
 
                                         await page.waitForTimeout(3000);
                                         try {
-                                            const planSeleccionado = await ofertaPage.seleccionarPlanAleatorio();
-                                            console.log(`✅ Plan seleccionado después de reintento: ${planSeleccionado}`);
-
+                                            // ►►► SELECCIÓN AUTOMÁTICA DE PLAN (ALEATORIO)
+                                            const planSeleccionado = await seleccionarPlanAutomatico(ofertaPage);
                                             await page.waitForTimeout(3000);
+
                                             try {
                                                 await ofertaPage.esperarOfertasCargadas();
-                                                const ofertaSeleccionada = await ofertaPage.seleccionarOfertaAleatoria();
-                                                console.log(`✅ Oferta seleccionada después de reintento: ${ofertaSeleccionada.nombre}`);
+
+                                                // ►►► SELECCIÓN AUTOMÁTICA DE OFERTA (ALEATORIA)
+                                                const ofertaSeleccionada = await seleccionarOfertaAutomatica(ofertaPage);
+
+                                                // ►►► SELECCIÓN AUTOMÁTICA DE PRODUCTOS ADICIONALES (ALEATORIO)
+                                                await seleccionarProductosAdicionalesAutomatico(ofertaPage);
+
                                             } catch (ofertaError) {
-                                                console.log('⚠️ Error al seleccionar oferta después de reintento:', ofertaError.message);
+                                                console.log('⚠️ Error al seleccionar oferta automáticamente después de reintento:', ofertaError.message);
                                             }
 
                                         } catch (planError) {
-                                            console.log('⚠️ Error al seleccionar plan después de reintento:', planError.message);
+                                            console.log('⚠️ Error al seleccionar plan automáticamente después de reintento:', planError.message);
                                         }
                                     }
                                 }
@@ -790,7 +1151,7 @@ if (currentUrl === 'about:blank') {
 
                             if (reinicioExitoso) {
                                 console.log('🔄 Reinicio exitoso - BUSCANDO SCORE NUEVAMENTE...');
-                                const scoreEncontrado = await buscarScoreDespuesReinicio(page, winforcePage, basePage);
+                                const scoreEncontrado = await buscarScoreDespuesReinicio(page, winforcePage, basePage, coordenadasManuales);
 
                                 if (scoreEncontrado) {
                                     console.log('✅ Score encontrado después de reinicio - CONTINUANDO FLUJO...');
@@ -878,119 +1239,115 @@ if (currentUrl === 'about:blank') {
             }
         });
 
-await test.step('Confirmar venta completa', async () => {
-    const confirmarVentaPage = new ConfirmarVentaPage(page);
-    let ventaExitosa = false;
-    let intentos = 0;
-    const maxIntentos = 20;
+        await test.step('Confirmar venta completa', async () => {
+            const confirmarVentaPage = new ConfirmarVentaPage(page);
+            let ventaExitosa = false;
+            let intentos = 0;
+            const maxIntentos = 20;
 
-    do {
-        intentos++;
-        console.log(`🔄 Intento ${intentos} de ${maxIntentos} - Confirmación de venta`);
+            do {
+                intentos++;
+                console.log(`🔄 Intento ${intentos} de ${maxIntentos} - Confirmación de venta`);
 
-        try {
-            await confirmarVentaPage.esperarCarga();
+                try {
+                    await confirmarVentaPage.esperarCarga();
 
-            const ventaConfirmada = await confirmarVentaPage.confirmarVentaCompleta();
+                    // ►►► PROCESAMIENTO AUTOMÁTICO DE PORTABILIDAD (SIEMPRE NO)
+                    await procesarPortabilidadAutomatica(confirmarVentaPage);
 
-            console.log('📊 RESULTADO VENTA:');
-            console.log(`   📞 Canal: ${ventaConfirmada.canalVenta}`);
-            console.log(`   📅 Fecha: ${ventaConfirmada.fechaProgramacion}`);
-            console.log(`   ⏰ Tramo: ${ventaConfirmada.tramoHorario}`);
-            console.log(`   🔍 Cómo se enteró: ${ventaConfirmada.comoSeEntero}`);
-            console.log(`   📱 Operador: ${ventaConfirmada.operadorActual}`);
-            console.log(`   📁 Archivo subido: ${ventaConfirmada.archivoSubido ? '✅ Sí' : '❌ No'}`);
-            console.log(`   🟢 Solicitud realizada: ${ventaConfirmada.solicitudRealizada ? '✅ Sí' : '❌ No'}`);
+                    const ventaConfirmada = await confirmarVentaPage.confirmarVentaCompleta();
 
-            if (!ventaConfirmada.solicitudRealizada) {
-                console.log('❌ La solicitud no se pudo completar, reiniciando...');
-               const reinicioExitoso = await reiniciarTestCompleto(page, winforcePage, basePage);
-                if (reinicioExitoso) {
-                    // Después de reiniciar exitosamente, SALIR del bucle de confirmación
-                    // para volver al inicio del flujo completo
-                    console.log('✅ Reinicio exitoso, volviendo al inicio del flujo');
-                    return; // Salir de este step, no lanzar error
-                } else {
-                    console.log('❌ Reinicio falló, continuando con siguiente intento');
-                    continue;
-                }
-            }
+                    console.log('📊 RESULTADO VENTA:');
+                    console.log(`   📞 Canal: ${ventaConfirmada.canalVenta}`);
+                    console.log(`   📅 Fecha: ${ventaConfirmada.fechaProgramacion}`);
+                    console.log(`   ⏰ Tramo: ${ventaConfirmada.tramoHorario}`);
+                    console.log(`   🔍 Cómo se enteró: ${ventaConfirmada.comoSeEntero}`);
+                    console.log(`   📱 Operador: ${ventaConfirmada.operadorActual}`);
+                    console.log(`   📁 Archivo subido: ${ventaConfirmada.archivoSubido ? '✅ Sí' : '❌ No'}`);
+                    console.log(`   🟢 Solicitud realizada: ${ventaConfirmada.solicitudRealizada ? '✅ Sí' : '❌ No'}`);
 
-            ventaExitosa = await confirmarVentaPage.manejarModalVenta();
-
-            if (ventaExitosa) {
-                console.log('🎉 ¡VENTA EXITOSA REGISTRADA!');
-                ventasExitosas++;
-                console.log(`✅ Venta exitosa ${ventasExitosas}/${ventasRequeridas} completada`);
-
-                if (dniAleatorio) {
-                    const marcadoExitoso = marcarDNIComoUsado(dniAleatorio);
-                    if (marcadoExitoso) {
-                        console.log(`✅ DNI ${dniAleatorio} marcado como usado después de venta exitosa`);
-                        console.log(`📋 DNI REGISTRADO EXITOSAMENTE: ${dniAleatorio}`);
+                    if (!ventaConfirmada.solicitudRealizada) {
+                        console.log('❌ La solicitud no se pudo completar, reiniciando...');
+                        const reinicioExitoso = await reiniciarTestCompleto(page, winforcePage, basePage);
+                        if (reinicioExitoso) {
+                            return;
+                        } else {
+                            console.log('❌ Reinicio falló, continuando con siguiente intento');
+                            continue;
+                        }
                     }
-                }
 
-                // ►►► REINICIAR INMEDIATAMENTE PARA SIGUIENTE VENTA
-                if (ventasExitosas < ventasRequeridas) {
-                    console.log(`\n🔄 REINICIANDO FLUJO PARA SIGUIENTE VENTA...`);
-                    const reinicioExitoso = await reiniciarTestCompleto(page, winforcePage, basePage);
-                    if (reinicioExitoso) {
-                        console.log('✅ Reinicio exitoso, continuando con siguiente venta...');
+                    ventaExitosa = await confirmarVentaPage.manejarModalVenta();
+
+                    if (ventaExitosa) {
+                        console.log('🎉 ¡VENTA EXITOSA REGISTRADA!');
+                        ventasExitosas++;
+                        console.log(`✅ Venta exitosa ${ventasExitosas}/${ventasRequeridas} completada`);
+
+                        if (dniAleatorio) {
+                            const marcadoExitoso = marcarDNIVentaExitosa(dniAleatorio);
+                            if (marcadoExitoso) {
+                                console.log(`✅ DNI ${dniAleatorio} marcado como VENTA EXITOSA`);
+                                console.log(`📋 DNI REGISTRADO EXITOSAMENTE: ${dniAleatorio}`);
+                                dnisExitososEstaEjecucion.push(dniAleatorio);
+                            }
+                        }
+
+                        if (coordenadasActuales) {
+                            marcarCoordenadaVentaExitosa(coordenadasActuales.lat, coordenadasActuales.lon);
+                        }
+
+                        if (ventasExitosas < ventasRequeridas) {
+                            console.log(`\n🔄 REINICIANDO FLUJO PARA SIGUIENTE VENTA...`);
+                            const reinicioExitoso = await reiniciarTestCompleto(page, winforcePage, basePage);
+                            if (reinicioExitoso) {
+                                console.log('✅ Reinicio exitoso, continuando con siguiente venta...');
+                                break;
+                            } else {
+                                console.log('❌ Reinicio falló, terminando test');
+                                throw new Error('REINICIO_FALLIDO_DESPUES_DE_VENTA');
+                            }
+                        }
                         break;
                     } else {
-                        console.log('❌ Reinicio falló, terminando test');
-                        throw new Error('REINICIO_FALLIDO_DESPUES_DE_VENTA');
+                        console.log('❌ Venta no exitosa, reiniciando proceso...');
+                        const reinicioExitoso = await reiniciarTestCompleto(page, winforcePage, basePage);
+                        if (reinicioExitoso) {
+                            return;
+                        } else {
+                            console.log('❌ Reinicio falló, continuando con siguiente intento');
+                            continue;
+                        }
+                    }
+
+                } catch (error) {
+                    console.log('❌ ERROR en confirmación de venta:', error.message);
+                    console.log('🔄 Reiniciando flujo completo debido a error...');
+
+                    const reinicioExitoso = await reiniciarTestCompleto(page, winforcePage, basePage);
+                    if (reinicioExitoso) {
+                        return;
+                    } else {
+                        console.log('❌ No se pudo reiniciar después del error');
+                        if (intentos >= maxIntentos) {
+                            throw new Error(`No se pudo completar la confirmación de venta después de ${intentos} intentos`);
+                        }
+                        continue;
                     }
                 }
-                break;
-            } else {
-                console.log('❌ Venta no exitosa, reiniciando proceso...');
+
+            } while (!ventaExitosa && intentos < maxIntentos);
+
+            if (!ventaExitosa) {
+                console.log(`⚠️ No se pudo completar la confirmación de venta después de ${intentos} intentos, reiniciando...`);
                 const reinicioExitoso = await reiniciarTestCompleto(page, winforcePage, basePage);
-                if (reinicioExitoso) {
-                    // Después de reiniciar exitosamente, SALIR del bucle de confirmación
-                    // para volver al inicio del flujo completo
-                    console.log('✅ Reinicio exitoso, volviendo al inicio del flujo');
-                    return; // Salir de este step, no lanzar error
-                } else {
-                    console.log('❌ Reinicio falló, continuando con siguiente intento');
-                    continue;
+                if (!reinicioExitoso) {
+                    throw new Error(`No se pudo completar la confirmación de venta después de ${intentos} intentos y reinicio falló`);
                 }
+                console.log('✅ Reinicio exitoso, volviendo al inicio del flujo');
             }
+        });
 
-        } catch (error) {
-            console.log('❌ ERROR en confirmación de venta:', error.message);
-            console.log('🔄 Reiniciando flujo completo debido a error...');
-
-            // Reiniciar el flujo completo
-            const reinicioExitoso = await reiniciarTestCompleto(page, winforcePage, basePage);
-            if (reinicioExitoso) {
-                // Después de reiniciar exitosamente, SALIR del bucle de confirmación
-                console.log('✅ Reinicio exitoso después de error, volviendo al inicio del flujo');
-                return; // Salir de este step, no lanzar error
-            } else {
-                console.log('❌ No se pudo reiniciar después del error');
-                if (intentos >= maxIntentos) {
-                    throw new Error(`No se pudo completar la confirmación de venta después de ${intentos} intentos`);
-                }
-                continue;
-            }
-        }
-
-    } while (!ventaExitosa && intentos < maxIntentos);
-
-    // Si no fue exitosa y salimos del bucle, NO lanzar error sino reiniciar
-    if (!ventaExitosa) {
-        console.log(`⚠️ No se pudo completar la confirmación de venta después de ${intentos} intentos, reiniciando...`);
-        const reinicioExitoso = await reiniciarTestCompleto(page, winforcePage, basePage);
-        if (!reinicioExitoso) {
-            throw new Error(`No se pudo completar la confirmación de venta después de ${intentos} intentos y reinicio falló`);
-        }
-        console.log('✅ Reinicio exitoso, volviendo al inicio del flujo');
-        // No lanzar error, simplemente volver al inicio del while loop principal
-    }
-});
-        // ►►► VERIFICAR ESTADO DESPUÉS DE CADA VENTA
         if (ventasExitosas < ventasRequeridas) {
             console.log('🔍 Verificando estado después de venta exitosa...');
             const currentUrl = page.url();
@@ -1010,30 +1367,66 @@ await test.step('Confirmar venta completa', async () => {
             }
         }
 
-        // ►►► SOLO INCREMENTAR CONTADOR, EL REINICIO YA SE HIZO ARRIBA
         ejecucionCompleta++;
-    } // ← Cierre del while loop principal
+    }
 
-    // ►►► RESUMEN FINAL (FUERA DEL WHILE LOOP)
+    // ►►► RESUMEN FINAL
     await test.step('Resumen final del proceso', async () => {
-        console.log('\n🎉' + '='.repeat(60));
+        console.log('\n🎉' + '═'.repeat(80));
         console.log('🎯 PROCESO COMPLETADO EXITOSAMENTE');
-        console.log('🎉' + '='.repeat(60));
+        console.log('🎉' + '═'.repeat(80));
 
         console.log(`\n📊 ESTADÍSTICAS FINALES:`);
         console.log(`✅ Ventas exitosas completadas: ${ventasExitosas}/${ventasRequeridas}`);
         console.log(`🔄 Total de ejecuciones realizadas: ${ejecucionCompleta - 1}`);
         console.log(`📈 Tasa de éxito: ${((ventasExitosas / (ejecucionCompleta - 1)) * 100).toFixed(2)}%`);
 
+        console.log(`\n📋 DNIs EXITOSOS EN ESTA PRUEBA (${dnisExitososEstaEjecucion.length}):`);
+        console.log('═'.repeat(50));
+        if (dnisExitososEstaEjecucion.length > 0) {
+            dnisExitososEstaEjecucion.forEach((dni, index) => {
+                console.log(`${index + 1}. ${dni}`);
+            });
+        } else {
+            console.log('❌ No hubo DNIs exitosos en esta prueba');
+        }
+        console.log('═'.repeat(50));
+
         console.log(`\n📋 INFORMACIÓN DE DNIs:`);
         console.log(`🎯 DNIs usados en esta ejecución: ${ventasExitosas}`);
         console.log(`📊 DNIs restantes disponibles: ${leerArchivoDNIs().disponibles.length}`);
-        console.log(`📈 DNIs usados totales: ${leerArchivoDNIs().usados.length}`);
+        console.log(`✅ DNIs de ventas exitosas: ${leerArchivoDNIs().ventasExitosas.length}`);
+        console.log(`🚫 DNIs que no califican: ${leerArchivoDNIs().noCalifican.length}`);
+
+        console.log(`\n📋 LISTA DE DNIs DE VENTAS EXITOSAS:`);
+        console.log('═'.repeat(40));
+        const dnisVentasExitosas = leerArchivoDNIs().ventasExitosas;
+        if (dnisVentasExitosas.length > 0) {
+            dnisVentasExitosas.forEach((dni, index) => {
+                console.log(`${index + 1}. ${dni}`);
+            });
+        } else {
+            console.log('❌ No hay DNIs de ventas exitosas registrados');
+        }
+        console.log('═'.repeat(40));
+
+        console.log(`\n📋 LISTA DE DNIs QUE NO CALIFICAN:`);
+        console.log('═'.repeat(40));
+        const dnisNoCalifican = leerArchivoDNIs().noCalifican;
+        if (dnisNoCalifican.length > 0) {
+            dnisNoCalifican.forEach((dni, index) => {
+                console.log(`${index + 1}. ${dni}`);
+            });
+        } else {
+            console.log('✅ No hay DNIs que no califiquen');
+        }
+        console.log('═'.repeat(40));
 
         console.log(`\n📍 INFORMACIÓN DE COORDENADAS:`);
         console.log(`🗺️  Coordenadas usadas totales: ${leerCoordenadasUsadas().usadas.length}`);
+        console.log(`✅ Coordenadas de ventas exitosas: ${leerCoordenadasUsadas().ventasExitosas.length}`);
         console.log(`🚫 Coordenadas sin cobertura: ${leerCoordenadasUsadas().sinCobertura.length}`);
-        console.log(`🌐 Total de coordenadas procesadas: ${leerCoordenadasUsadas().usadas.length + leerCoordenadasUsadas().sinCobertura.length}`);
+        console.log(`🌐 Total de coordenadas procesadas: ${leerCoordenadasUsadas().usadas.length + leerCoordenadasUsadas().ventasExitosas.length + leerCoordenadasUsadas().sinCobertura.length}`);
 
         console.log('\n⏱️  TIEMPO DE EJECUCIÓN:');
         console.log(`🕒 Hora de finalización: ${new Date().toLocaleTimeString()}`);
@@ -1042,19 +1435,8 @@ await test.step('Confirmar venta completa', async () => {
         console.log('\n💾 GUARDANDO INFORMACIÓN...');
         await page.waitForTimeout(2000);
 
-        // Tomar screenshot final
-        try {
-            await page.screenshot({
-                path: `resultados-finales-${new Date().getTime()}.png`,
-                fullPage: true
-            });
-            console.log('📸 Captura de pantalla guardada: resultados-finales.png');
-        } catch (error) {
-            console.log('⚠️ No se pudo guardar la captura de pantalla:', error.message);
-        }
-
-        console.log('\n🎉' + '='.repeat(60));
+        console.log('\n🎉' + '═'.repeat(80));
         console.log('✅ TODAS LAS VENTAS SOLICITADAS HAN SIDO COMPLETADAS');
-        console.log('🎉' + '='.repeat(60));
+        console.log('🎉' + '═'.repeat(80));
     });
 });

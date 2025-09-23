@@ -7,12 +7,21 @@ readonly page: Page;
 baseUrl: string;
 private static urlLogged = false; // ← Flag estático para evitar logs duplicados
 
+
+
 constructor(page: Page) {
         this.page = page;
         this.baseUrl = this.obtenerUrlGuardada() || 'http://10.23.100.19:183/proy_JC';
 
         // Solo mostrar el log una vez
         if (!BasePage.urlLogged) {
+          // Mostrar dashboard inicial
+    console.log('\n' + '═'.repeat(80));
+    console.log('           🚀 AUTOMATIZACION DE WINFORCE');
+    console.log('═'.repeat(80));
+    console.log('  TEST: Flujo completo Winforce con múltiples ventas');
+    console.log(`  ⏰ TIME: ${new Date().toLocaleTimeString()} | 📅 DATE: ${new Date().toLocaleDateString()}`);
+    console.log('═'.repeat(80));
             console.log(`✅ URL base configurada: ${this.baseUrl}`);
             BasePage.urlLogged = true;
         }
