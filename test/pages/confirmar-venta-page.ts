@@ -795,7 +795,7 @@ constructor(page: Page) {
             if (fileName) {
                 console.log(`📄 Archivo subido correctamente: ${fileName}`);
             } else {
-                console.log('⚠️ No se pudo verificar la subida del archivo, pero se intentó subir');
+                console.log('-');
             }
 
         } catch (error) {

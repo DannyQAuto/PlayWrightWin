@@ -45,7 +45,7 @@ static mostrarHeader(): void {
     console.log(`🗃️  Base: ${config.database}`);
     console.log(`👤 Usuario: ${config.user}`);
     console.log(`⏰ Tiempo: ${tiempo}`);
-    console.log('🔮 Estado: PROCESANDO DATOS MULTIDIMENSIONALES...');
+    console.log('🔮 Estado: PROCESANDO DATOS WIN..');
     console.log('─'.repeat(80));
   }
 
