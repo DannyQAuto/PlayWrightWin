@@ -310,16 +310,16 @@ constructor(page: Page) {
 
     async esperarOfertasCargadas(): Promise<void> {
         // Esperar máximo 15 segundos a que aparezcan ofertas
-        for (let i = 0; i < 15; i++) {
+        for (let i = 0; i < 25; i++) {
             const hayOfertas = await this.hayOfertasDisponibles();
             if (hayOfertas) {
                 return;
             }
             await this.page.waitForTimeout(1000);
-            console.log(`⏳ Esperando ofertas... ${i + 1}/15 segundos`);
+            console.log(`⏳ Esperando ofertas... ${i + 1}/25 segundos`);
         }
 
-        throw new Error('Las ofertas no se cargaron después de 15 segundos');
+        throw new Error('Las ofertas no se cargaron después de 25 segundos');
     }
 
     // ►►► MÉTODO MEJORADO PARA ENCONTRAR SELECTOR

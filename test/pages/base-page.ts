@@ -5,36 +5,58 @@ import * as path from 'path';
 export class BasePage {
 readonly page: Page;
 baseUrl: string;
-private static urlLogged = false; // ← Flag estático para evitar logs duplicados
+private configFile: string;
+private readonly environment: string; // Identificar el ambiente
+private static urlLogged = false;
 
-
-
-constructor(page: Page) {
+constructor(page: Page, configFile: string = 'config.json') {
         this.page = page;
-        this.baseUrl = this.obtenerUrlGuardada() || 'http://10.23.100.19:183/proy_JC';
+        this.configFile = configFile;
+        this.environment = configFile.includes('experiencia') ? 'experiencia' : 'winforce'; // Identificar ambiente
+
+        this.baseUrl = this.obtenerUrlGuardada() || this.getDefaultUrl();
 
         // Solo mostrar el log una vez
         if (!BasePage.urlLogged) {
-          // Mostrar dashboard inicial
-    console.log('\n' + '═'.repeat(80));
-    console.log('           🚀 AUTOMATIZACION DE WINFORCE');
-    console.log('═'.repeat(80));
-    console.log('  TEST: Flujo completo Winforce con múltiples ventas');
-    console.log(`  ⏰ TIME: ${new Date().toLocaleTimeString()} | 📅 DATE: ${new Date().toLocaleDateString()}`);
-    console.log('═'.repeat(80));
-            console.log(`✅ URL base configurada: ${this.baseUrl}`);
+            this.showInitialDashboard();
             BasePage.urlLogged = true;
         }
+    }
+
+    // ►►► MÉTODO PARA OBTENER URL POR DEFECTO SEGÚN EL AMBIENTE
+    private getDefaultUrl(): string {
+        if (this.environment === 'experiencia') {
+            return 'http://10.23.100.24/proy_RM/Win.CRM_EXPERIENCIA/pages';
+        } else {
+            return 'http://10.23.100.19:183/proy_JC';
+        }
+    }
+
+    // ►►► MÉTODO PARA MOSTRAR DASHBOARD INICIAL
+    private showInitialDashboard(): void {
+        console.log('\n' + '═'.repeat(80));
+        console.log('           🚀 AUTOMATIZACION DE VENTAS');
+        console.log('═'.repeat(80));
+        console.log('  TEST: Flujo completo Winforce con múltiples ventas');
+        console.log(`  ⏰ TIME: ${new Date().toLocaleTimeString()} | 📅 DATE: ${new Date().toLocaleDateString()}`);
+        console.log('═'.repeat(80));
+        console.log(`🎯 Ambiente: ${this.environment.toUpperCase()} && CRMEXPERIENCIA`);
+        console.log(`✅ URL base configurada: ${this.baseUrl} & http://10.23.100.24/proy_RM/Win.CRM_EXPERIENCIA/pages/login_form.php `);
+        console.log('═'.repeat(80));
     }
 
     // ►►► MÉTODO PARA OBTENER LA URL GUARDADA
     private obtenerUrlGuardada(): string | null {
         try {
-            const configPath = path.join(__dirname, 'config.json');
+            const configPath = path.join(__dirname, this.configFile);
             if (fs.existsSync(configPath)) {
                 const configData = fs.readFileSync(configPath, 'utf8');
                 const config = JSON.parse(configData);
-                return config.lastBaseUrl || null;
+                const url = config.lastBaseUrl || null;
+                if (url) {
+                    console.log(`📖 URL recuperada de ${this.configFile}: ${url}`);
+                }
+                return url;
             }
         } catch (error) {
             console.log('⚠️ Error leyendo configuración:', error.message);
@@ -45,25 +67,118 @@ constructor(page: Page) {
     // ►►► MÉTODO PARA GUARDAR LA URL PERSISTENTEMENTE
     private guardarUrlEnConfig(nuevaUrl: string): void {
         try {
-            const configPath = path.join(__dirname, 'config.json');
+            const configPath = path.join(__dirname, this.configFile);
             const configData = {
                 lastBaseUrl: nuevaUrl,
-                updatedAt: new Date().toISOString()
+                updatedAt: new Date().toISOString(),
+                environment: this.environment
             };
             fs.writeFileSync(configPath, JSON.stringify(configData, null, 2));
-            console.log('✅ URL guardada en configuración para próximas ejecuciones');
+            console.log(`💾 URL guardada en ${this.configFile}`);
         } catch (error) {
             console.log('⚠️ Error guardando configuración:', error.message);
         }
     }
 
-    // ►►► MÉTODO PARA ACTUALIZAR URL (AHORA GUARDA PERSISTENTEMENTE)
+    // ►►► NUEVO MÉTODO: Verificar si la URL corresponde al ambiente actual
+    private debeGuardarUrl(url: string): boolean {
+        const esUrlWinforce = url.includes('10.23.100.19') || url.includes('proy_JC');
+        const esUrlExperiencia = url.includes('10.23.100.24') || url.includes('EXPERIENCIA');
+
+        if (this.environment === 'winforce' && esUrlWinforce) {
+            return true;
+        }
+        if (this.environment === 'experiencia' && esUrlExperiencia) {
+            return true;
+        }
+
+        return false;
+    }
+
+    // ►►► MÉTODO PARA ACTUALIZAR URL (CON BLOQUEO DE MODIFICACIÓN CRUZADA)
     setBaseUrl(newUrl: string): void {
-        // Limpiar la URL (remover /login, /ventas, etc. del final)
         const urlLimpia = newUrl.replace(/\/\w+$/, '');
         this.baseUrl = urlLimpia;
-        this.guardarUrlEnConfig(urlLimpia);
-        console.log(`✅ URL base actualizada a: ${urlLimpia}`);
+
+        // SOLO guardar si la URL pertenece al mismo ambiente
+        if (this.debeGuardarUrl(urlLimpia)) {
+            this.guardarUrlEnConfig(urlLimpia);
+            console.log(`✅ URL ${this.environment} actualizada a: ${urlLimpia}`);
+        } else {
+
+        }
+    }
+
+    // ►►► MÉTODO PARA CAMBIAR A LA RUTA ALTERNATIVA (CON BLOQUEO)
+    setAlternativeUrl(): void {
+        const alternativeUrl = 'http://10.23.100.24/proy_RM/Win.CRM_EXPERIENCIA/pages';
+        this.baseUrl = alternativeUrl;
+
+        // SOLO guardar si es el ambiente de experiencia
+        if (this.environment === 'experiencia') {
+            this.guardarUrlEnConfig(alternativeUrl);
+            console.log(`🔄 URL base cambiada a ruta alternativa: ${alternativeUrl}`);
+        } else {
+            console.log(`🚫 BLOQUEO: No se puede cambiar a URL alternativa desde ambiente ${this.environment}`);
+            console.log(`ℹ️  URL alternativa solo disponible para ambiente experiencia`);
+        }
+    }
+
+    // ►►► MÉTODO PARA NAVEGAR A LA RUTA ALTERNATIVA DE LOGIN (SOLO EXPERIENCIA)
+    async navigateToAlternativeLogin(waitForLoad: boolean = true): Promise<void> {
+        if (this.environment !== 'experiencia') {
+            console.log(`🚫 BLOQUEO: navigateToAlternativeLogin solo disponible para ambiente experiencia`);
+            return;
+        }
+
+        const alternativeLoginUrl = 'http://10.23.100.24/proy_RM/Win.CRM_EXPERIENCIA/pages/login_form.php';
+        await this.page.goto(alternativeLoginUrl, {
+            waitUntil: 'domcontentloaded',
+            timeout: 30000
+        });
+
+        if (waitForLoad) {
+            await this.waitForPageLoad(30000);
+        }
+        console.log(`🧭 Navegado a ruta alternativa de login: ${alternativeLoginUrl}`);
+    }
+
+    // ►►► MÉTODO PARA RESTABLECER LA URL POR DEFECTO
+    resetToDefaultUrl(): void {
+        const defaultUrl = this.getDefaultUrl();
+        this.baseUrl = defaultUrl;
+
+        // Siempre permitir reset a la URL por defecto del ambiente
+        this.guardarUrlEnConfig(defaultUrl);
+        console.log(`🔄 URL base restablecida a valor por defecto: ${defaultUrl}`);
+    }
+
+    // ►►► MÉTODO PARA OBTENER EL AMBIENTE ACTUAL
+    getCurrentEnvironment(): string {
+        return this.environment;
+    }
+
+    // ►►► MÉTODO PARA OBTENER EL ARCHIVO DE CONFIGURACIÓN ACTUAL
+    getCurrentConfigFile(): string {
+        return this.configFile;
+    }
+
+    // ►►► MÉTODO PARA CAMBIAR EL ARCHIVO DE CONFIGURACIÓN (CON VALIDACIÓN)
+    setConfigFile(newConfigFile: string): void {
+        const oldEnvironment = this.environment;
+        this.configFile = newConfigFile;
+
+        // Recargar la URL desde el nuevo archivo de configuración
+        const nuevaUrl = this.obtenerUrlGuardada() || this.getDefaultUrl();
+        this.baseUrl = nuevaUrl;
+
+        console.log(`📁 Archivo de configuración cambiado: ${oldEnvironment} → ${this.environment}`);
+        console.log(`✅ URL base actual: ${this.baseUrl}`);
+    }
+
+    // ►►► MÉTODO PARA VERIFICAR SI UNA URL ES COMPATIBLE CON EL AMBIENTE ACTUAL
+    isUrlCompatible(url: string): boolean {
+        return this.debeGuardarUrl(url);
     }
 
     // Método para navegar a una URL relativa
@@ -94,19 +209,19 @@ constructor(page: Page) {
         await this.navigateTo('ventas', waitForLoad);
     }
 
-    // Método para esperar y hacer click (SIN allure.step)
+    // Método para esperar y hacer click
     async waitAndClick(locator: Locator): Promise<void> {
         await locator.waitFor({ state: 'visible' });
         await locator.click();
     }
 
-    // Método para llenar un campo (SIN allure.step)
+    // Método para llenar un campo
     async fillField(locator: Locator, text: string): Promise<void> {
         await locator.waitFor({ state: 'visible' });
         await locator.fill(text);
     }
 
-    // Método para obtener texto (SIN allure.step)
+    // Método para obtener texto
     async getElementText(locator: Locator): Promise<string> {
         await locator.waitFor({ state: 'visible' });
         return await locator.textContent() ?? '';
@@ -130,12 +245,11 @@ constructor(page: Page) {
         await selectLocator.selectOption({ index: index });
     }
 
-    // Método genérico para seleccionar opción (puede recibir value, label o index)
+    // Método genérico para seleccionar opción
     async selectOption(selectLocator: Locator, option: string | { value?: string, label?: string, index?: number }): Promise<void> {
         await selectLocator.waitFor({ state: 'visible' });
 
         if (typeof option === 'string') {
-            // Intenta primero por value, luego por label
             try {
                 await selectLocator.selectOption({ value: option });
             } catch {
@@ -205,7 +319,6 @@ constructor(page: Page) {
     // Método para tomar screenshot
     async takeScreenshot(name: string): Promise<void> {
         const screenshot = await this.page.screenshot();
-        // Este método se usará desde los tests con allure.attachment
     }
 
     // Método adicional: obtener todas las opciones de un select

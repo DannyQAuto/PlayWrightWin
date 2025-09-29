@@ -621,14 +621,14 @@ async function reiniciarTestCompleto(page: any, winforcePage: any, basePage: Bas
         await winforcePage.loginWithDefaultCredentials();
 
         await page.waitForLoadState('networkidle', { timeout: 30000 });
-        await page.waitForTimeout(3000);
+        //await page.waitForTimeout(000);
 
         const newUrl = await basePage.getCurrentUrl();
         if (!newUrl.includes('nuevoSeguimiento')) {
             await winforcePage.clickVentasMenu();
-            await page.waitForTimeout(3000);
+            //await page.waitForTimeout(3000);
             await winforcePage.clickNewLead();
-            await page.waitForTimeout(2000);
+            //await page.waitForTimeout(2000);
         }
 
         console.log('✅ Flujo reiniciado exitosamente');
@@ -704,18 +704,18 @@ async function buscarScoreDespuesReinicio(page: any, winforcePage: any, basePage
         try {
             await winforcePage.AnadirLead.waitFor({ state: 'visible', timeout: 10000 });
             await winforcePage.clickAnadirLead();
-            await page.waitForTimeout(3000);
+            //await page.waitForTimeout(3000);
 
             await winforcePage.CoodenadaLat.fill(coordenadas.lat);
             await winforcePage.CoodenadaLong.fill(coordenadas.lon);
             await winforcePage.confirmarCoordenadas();
-            await page.waitForTimeout(2000);
+           // await page.waitForTimeout(2000);
 
             await winforcePage.selectDNIAsDocumentType();
-            await page.waitForTimeout(1000);
+          //  await page.waitForTimeout(1000);
 
             await winforcePage.Documento(dniAleatorio);
-            await page.waitForTimeout(2000);
+           // await page.waitForTimeout(2000);
 
             await winforcePage.clickBuscarDni();
 
@@ -783,7 +783,7 @@ async function continuarFlujoCompletoDespuesReinicio(page: any, winforcePage: an
 
     await test.step('Llenar información de contacto después de reinicio', async () => {
         await winforcePage.llenarInformacionContacto();
-        await page.waitForTimeout(2000);
+        //await page.waitForTimeout(2000);
         console.log('✅ Información de contacto completada después de reinicio');
     });
 
@@ -791,35 +791,35 @@ async function continuarFlujoCompletoDespuesReinicio(page: any, winforcePage: an
         try {
             await winforcePage.seleccionarTipoDomicilio('Hogar');
             console.log('✅ Tipo de domicilio "Hogar" seleccionado después de reinicio');
-            await page.waitForTimeout(2000);
+            //await page.waitForTimeout(2000);
             await winforcePage.seleccionarPredioInquilino();
-            await page.waitForTimeout(2000);
+            //await page.waitForTimeout(2000);
         } catch (error) {
             console.log('❌ Error al seleccionar tipo de domicilio después de reinicio', error);
             await winforcePage.seleccionarHogar();
             console.log('✅ Tipo de domicilio "Hogar" seleccionado (método alternativo)');
-            await page.waitForTimeout(2000);
+            //await page.waitForTimeout(2000);
             await winforcePage.seleccionarPredioInquilino();
-            await page.waitForTimeout(2000);
+           // await page.waitForTimeout(2000);
         }
     });
 
     await test.step('Seleccionar tipo de contacto después de reinicio', async () => {
         await winforcePage.seleccionarTipoContactoVenta();
         console.log('✅ Venta seleccionada después de reinicio');
-        await page.waitForTimeout(2000);
+      //  await page.waitForTimeout(2000);
     });
 
     await test.step('Completar información adicional después de reinicio', async () => {
         await winforcePage.completarInformacionAdicional();
         console.log('✅ Información adicional completada después de reinicio');
-        await page.waitForTimeout(2002);
+        //await page.waitForTimeout(2002);
     });
 
     await test.step('Seleccionar vendedor después de reinicio', async () => {
         try {
             await winforcePage.seleccionarPrimerVendedor();
-            await page.waitForTimeout(2000);
+            //await page.waitForTimeout(2000);
             const seleccionExitosa = await winforcePage.verificarVendedorSeleccionado();
             if (!seleccionExitosa) {
                 console.log('⚠️ La selección automática de vendedor falló después de reinicio, continuando...');
@@ -938,9 +938,9 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
                 await winforcePage.loginWithDefaultCredentials();
                 await page.waitForLoadState('networkidle');
                 await winforcePage.clickVentasMenu();
-                await page.waitForTimeout(3000);
+               // await page.waitForTimeout(3000);
                 await winforcePage.clickNewLead();
-                await page.waitForTimeout(2000);
+               // await page.waitForTimeout(2000);
                 return;
             }
 
@@ -949,9 +949,9 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
                 await winforcePage.loginWithDefaultCredentials();
                 await page.waitForLoadState('networkidle');
                 await winforcePage.clickVentasMenu();
-                await page.waitForTimeout(3000);
+               // await page.waitForTimeout(3000);
                 await winforcePage.clickNewLead();
-                await page.waitForTimeout(2000);
+              //  await page.waitForTimeout(2000);
             }
             else if (!currentUrl.includes('nuevoSeguimiento')) {
                 console.log('🔄 Estado incorrecto detectado, reiniciando...');
@@ -973,9 +973,9 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
                 await winforcePage.loginWithDefaultCredentials();
                 await page.waitForLoadState('networkidle');
                 await winforcePage.clickVentasMenu();
-                await page.waitForTimeout(3000);
+                //await page.waitForTimeout(3000);
                 await winforcePage.clickNewLead();
-                await page.waitForTimeout(2000);
+               // await page.waitForTimeout(2000);
             } else {
                 console.log('✅ Ya está en posición correcta, continuando...');
             }
@@ -1005,18 +1005,18 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
             try {
                 await winforcePage.AnadirLead.waitFor({ state: 'visible', timeout: 10000 });
                 await winforcePage.clickAnadirLead();
-                await page.waitForTimeout(3000);
+                //await page.waitForTimeout(3000);
 
                 await winforcePage.CoodenadaLat.fill(coordenadasActuales.lat);
                 await winforcePage.CoodenadaLong.fill(coordenadasActuales.lon);
                 await winforcePage.confirmarCoordenadas();
-                await page.waitForTimeout(2000);
+                //await page.waitForTimeout(2000);
 
                 await winforcePage.selectDNIAsDocumentType();
-                await page.waitForTimeout(1000);
+                //await page.waitForTimeout(1000);
 
                 await winforcePage.Documento(dniAleatorio);
-                await page.waitForTimeout(2000);
+               // await page.waitForTimeout(2000);
 
                 await winforcePage.clickBuscarDni();
 
@@ -1058,9 +1058,9 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
                 await page.waitForLoadState('networkidle');
                 await page.waitForTimeout(5000);
                 await winforcePage.clickVentasMenu();
-                await page.waitForTimeout(3000);
+               // await page.waitForTimeout(3000);
                 await winforcePage.clickNewLead();
-                await page.waitForTimeout(2000);
+               // await page.waitForTimeout(2000);
                 intento++;
                 debeContinuar = true;
             }
@@ -1083,7 +1083,7 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
         await test.step('Llenar información de contacto', async () => {
             try {
                 await winforcePage.llenarInformacionContacto();
-                await page.waitForTimeout(2000);
+               // await page.waitForTimeout(2000);
                 console.log('✅ Información de contacto completada exitosamente');
             } catch (error) {
                 console.log('❌ Error en contacto, reiniciando...', error.message);
@@ -1104,35 +1104,35 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
                 try {
                     await winforcePage.seleccionarTipoDomicilio('Hogar');
                     console.log('✅ Tipo de domicilio "Hogar" seleccionado exitosamente');
-                    await page.waitForTimeout(2000);
+                    //await page.waitForTimeout(2000);
                     await winforcePage.seleccionarPredioInquilino();
-                    await page.waitForTimeout(2000);
+                    //await page.waitForTimeout(2000);
                 } catch (error) {
                     console.log('❌ Error al seleccionar tipo de domicilio, intentando alternativa...', error);
                     await winforcePage.seleccionarHogar();
                     console.log('✅ Tipo de domicilio "Hogar" seleccionado (método alternativo)');
-                    await page.waitForTimeout(2000);
+                    //await page.waitForTimeout(2000);
                     await winforcePage.seleccionarPredioInquilino();
-                    await page.waitForTimeout(2000);
+                    //await page.waitForTimeout(2000);
                 }
             });
 
             await test.step('Seleccionar tipo de contacto - Venta', async () => {
                 await winforcePage.seleccionarTipoContactoVenta();
                 console.log('✅ Venta seleccionada exitosamente');
-                await page.waitForTimeout(2000);
+                //await page.waitForTimeout(2000);
             });
 
             await test.step('Completar información adicional', async () => {
                 await winforcePage.completarInformacionAdicional();
                 console.log('✅ Información adicional completada exitosamente');
-                await page.waitForTimeout(2000);
+                //await page.waitForTimeout(2000);
             });
 
             await test.step('Seleccionar vendedor', async () => {
                 try {
                     await winforcePage.seleccionarPrimerVendedor();
-                    await page.waitForTimeout(2000);
+                    //await page.waitForTimeout(2000);
                     const seleccionExitosa = await winforcePage.verificarVendedorSeleccionado();
                     if (!seleccionExitosa) {
                         console.log('⚠️ La selección automática de vendedor falló, continuando...');
@@ -1186,7 +1186,7 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
                                     await ofertaPage.seleccionarTipoBusquedaInternet();
                                     console.log('✅ Internet seleccionado exitosamente');
 
-                                    await page.waitForTimeout(2000);
+                                    //await page.waitForTimeout(2000);
                                     console.log('📋 Esperando que cargue el selector de planes...');
 
                                     const isPlanSelectVisible = await ofertaPage.isSelectFiltroOfertaVisible();
@@ -1213,7 +1213,7 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
                                             console.log(`🎯 Plan seleccionado aleatoriamente: ${planSeleccionado}`);
                                         }
 
-                                        await page.waitForTimeout(3000);
+                                        //await page.waitForTimeout(3000);
 
                                         try {
                                             await ofertaPage.esperarOfertasCargadas();
@@ -1238,7 +1238,7 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
                                                 ofertaSeleccionada = await ofertaPage.seleccionarOfertaAleatoria();
                                                 console.log(`🎯 Oferta seleccionada aleatoriamente: ${ofertaSeleccionada.nombre}`);
                                             }
-                                            await page.waitForTimeout(2000);
+                                           // await page.waitForTimeout(2000);
 
                                             console.log('🔄 Verificando productos adicionales...');
                                             const hayProductosAdicionales = await ofertaPage.hayProductosAdicionalesDisponibles();
@@ -1254,7 +1254,7 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
                                                     if (numerosProductos.length > 0) {
                                                         console.log(`✅ Seleccionando productos: ${numerosProductos.join(', ')}`);
                                                         await ofertaPage.seleccionarProductosAdicionalesManual(numerosProductos);
-                                                        await page.waitForTimeout(2000);
+                                                        //await page.waitForTimeout(2000);
                                                     } else {
                                                         console.log('✅ Continuando sin seleccionar productos adicionales');
                                                     }
@@ -1276,13 +1276,13 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
 
                                 } else {
                                     console.log('⚠️ Select de tipo búsqueda no visible, intentando con espera extendida...');
-                                    await page.waitForTimeout(8000);
+                                    //await page.waitForTimeout(8000);
                                     const retryVisible = await ofertaPage.isSelectTipoBusquedaVisible();
                                     if (retryVisible) {
                                         await ofertaPage.seleccionarTipoBusquedaInternet();
                                         console.log('✅ Internet seleccionado en reintento');
 
-                                        await page.waitForTimeout(3000);
+                                        //await page.waitForTimeout(3000);
                                         try {
                                             console.log('📋 Lista de planes disponibles:');
                                             console.log('-----------------------------');
@@ -1302,7 +1302,7 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
                                             } else {
                                                 planSeleccionado = await ofertaPage.seleccionarPlanAleatorio();
                                             }
-                                            await page.waitForTimeout(3000);
+                                            //await page.waitForTimeout(3000);
                                             try {
                                                 await ofertaPage.esperarOfertasCargadas();
                                                 const ofertas = await ofertaPage.listarOfertasConNumeros();
@@ -1339,7 +1339,7 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
                                                         if (numerosProductos.length > 0) {
                                                             console.log(`✅ Seleccionando productos: ${numerosProductos.join(', ')}`);
                                                             await ofertaPage.seleccionarProductosAdicionalesManual(numerosProductos);
-                                                            await page.waitForTimeout(2000);
+                                                            //await page.waitForTimeout(2000);
                                                         } else {
                                                             console.log('✅ Continuando sin seleccionar productos adicionales');
                                                         }
@@ -1384,21 +1384,21 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
                                 if (scoreEncontrado) {
                                     console.log('✅ Score encontrado después de reinicio - CONTINUANDO FLUJO...');
                                     await winforcePage.llenarInformacionContacto();
-                                    await page.waitForTimeout(2000);
+                                    //await page.waitForTimeout(2000);
 
                                     await winforcePage.seleccionarTipoDomicilio('Hogar');
-                                    await page.waitForTimeout(2000);
+                                    //await page.waitForTimeout(2000);
                                     await winforcePage.seleccionarPredioInquilino();
-                                    await page.waitForTimeout(2000);
+                                    //await page.waitForTimeout(2000);
 
                                     await winforcePage.seleccionarTipoContactoVenta();
-                                    await page.waitForTimeout(2000);
+                                    //await page.waitForTimeout(2000);
 
                                     await winforcePage.completarInformacionAdicional();
-                                    await page.waitForTimeout(2000);
+                                    //await page.waitForTimeout(2000);
 
                                     await winforcePage.seleccionarPrimerVendedor();
-                                    await page.waitForTimeout(2000);
+                                    //await page.waitForTimeout(2000);
 
                                     reintento++;
                                     continue;
@@ -1437,7 +1437,7 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
 
         await test.step('Verificar que el flujo se completó correctamente', async () => {
             try {
-                await page.waitForTimeout(3000);
+                //await page.waitForTimeout(3000);
 
                 const isInternetSelected = await ofertaPage.verificarInternetSeleccionado();
                 expect(isInternetSelected).toBeTruthy();
@@ -1591,9 +1591,9 @@ test('Flujo completo Winforce con múltiples ventas', async ({ winforcePage, pag
                 console.log('🔄 Ajustando estado para siguiente venta...');
                 try {
                     await winforcePage.clickVentasMenu();
-                    await page.waitForTimeout(3000);
+                    //await page.waitForTimeout(3000);
                     await winforcePage.clickNewLead();
-                    await page.waitForTimeout(2000);
+                    //await page.waitForTimeout(2000);
                     console.log('✅ Estado ajustado correctamente');
                 } catch (error) {
                     console.log('❌ Error ajustando estado, reiniciando...');
