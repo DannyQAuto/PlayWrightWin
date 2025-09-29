@@ -822,8 +822,8 @@ constructor(page: Page) {
                 console.log('✅ Modal de venta exitosa detectado');
 
                 // ►►► NUEVO: ESPERAR MÁS TIEMPO ANTES DE HACER CLIC
-                console.log('⏳ Esperando 8 segundos antes de hacer clic en OK...');
-                await this.page.waitForTimeout(8000); // Esperar 8 segundos adicionales
+                console.log('⏳ Esperando 5 segundos antes de hacer clic en OK...');
+                await this.page.waitForTimeout(5000); // Esperar 8 segundos adicionales
 
                 // Hacer clic en el botón OK del modal exitoso
                 await modalExitoso.click();
@@ -1051,14 +1051,14 @@ constructor(page: Page) {
 
         // Esperar a que los elementos principales estén visibles
         await Promise.all([
-            this.selectCanalVenta.waitFor({ state: 'visible', timeout: 15000 }),
-            this.inputFechaProgramacion.waitFor({ state: 'visible', timeout: 15000 }),
-            this.selectTramoHorario.waitFor({ state: 'visible', timeout: 15000 }),
-            this.selectComoSeEntero.waitFor({ state: 'visible', timeout: 15000 }),
-            this.selectOperadorActual.waitFor({ state: 'visible', timeout: 15000 }),
-            this.textareaObservaciones.waitFor({ state: 'visible', timeout: 15000 }),
-            this.inputArchivo.waitFor({ state: 'visible', timeout: 15000 }),
-            this.btnSolicitarAhora.waitFor({ state: 'visible', timeout: 15000 }) // ◄◄◄ NUEVO
+            this.selectCanalVenta.waitFor({ state: 'visible', timeout: 500 }),
+            this.inputFechaProgramacion.waitFor({ state: 'visible', timeout: 500 }),
+            this.selectTramoHorario.waitFor({ state: 'visible', timeout: 500 }),
+            this.selectComoSeEntero.waitFor({ state: 'visible', timeout: 500 }),
+            this.selectOperadorActual.waitFor({ state: 'visible', timeout: 500 }),
+            this.textareaObservaciones.waitFor({ state: 'visible', timeout: 500 }),
+            this.inputArchivo.waitFor({ state: 'visible', timeout: 500 }),
+            this.btnSolicitarAhora.waitFor({ state: 'visible', timeout: 500 }) // ◄◄◄ NUEVO
         ]);
 
         console.log('✅ Página de confirmación cargada correctamente');
